@@ -17,6 +17,7 @@
 #include "Common/Thread.h"
 #include "Core/ConfigManager.h"
 #include "Core/Core.h"
+#include "Core/DSP/DSPAnalyzer.h"
 #include "Core/DSP/DSPCaptureLogger.h"
 #include "Core/DSP/DSPCore.h"
 #include "Core/DSP/DSPHWInterface.h"
@@ -25,6 +26,7 @@
 #include "Core/DSP/Interpreter/DSPInterpreter.h"
 #include "Core/HW/DSPLLE/DSPLLEGlobals.h"
 #include "Core/HW/Memmap.h"
+#include "Core/HW/SystemTimers.h"
 #include "Core/Host.h"
 
 namespace DSP
@@ -332,6 +334,11 @@ void DSPLLE::DSP_Wait()
     s_ppc_event.Wait();
     s_ppc_event.Set();
   }
+}
+
+bool DSPLLE::WaitingForMail()
+{
+  return Analyzer::GetCodeFlags(g_dsp.pc) & Analyzer::CODE_IDLE_SKIP;
 }
 
 u32 DSPLLE::DSP_UpdateRate()
