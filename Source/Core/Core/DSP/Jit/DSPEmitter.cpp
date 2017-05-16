@@ -63,6 +63,15 @@ u16 DSPEmitter::RunCycles(u16 cycles)
   auto exec_addr = (DSPCompiledCode)m_enter_dispatcher;
   exec_addr();
 
+  // Don't end on an idle skip without running it once
+  while (Analyzer::GetCodeFlags(g_dsp.pc) & Analyzer::CODE_IDLE_SKIP)
+  {
+    u16 idle_start = g_dsp.pc;
+    exec_addr();
+    if (g_dsp.pc == idle_start)
+      break;
+  }
+
   if (g_dsp.reset_dspjit_codespace)
     ClearIRAMandDSPJITCodespaceReset();
 
