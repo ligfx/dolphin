@@ -21,6 +21,8 @@ public:
   virtual void DoState(PointerWrap& p) = 0;
   virtual void PauseAndLock(bool do_lock, bool unpause_on_unlock = true) = 0;
 
+  virtual bool WaitingForMail() = 0;
+
   virtual void DSP_WriteMailBoxHigh(bool cpu_mailbox, u16 value) = 0;
   virtual void DSP_WriteMailBoxLow(bool cpu_mailbox, u16 value) = 0;
   virtual u16 DSP_ReadMailBoxHigh(bool cpu_mailbox) = 0;

@@ -167,30 +167,42 @@ static CoreTiming::EventType* s_et_DSP;
 static CoreTiming::EventType* s_et_GenerateDSPInterrupt;
 static CoreTiming::EventType* s_et_CompleteARAM;
 
+static bool s_dsp_running = false;
+static bool s_new_mail = false;
+
 // DSP/CPU timeslicing.
 static void DSPCallback(u64 userdata, s64 cyclesLate)
 {
   // wait for last timeslice to finish (nop if running on same thread)
   s_dsp_emulator->DSP_Wait();
 
-  // splits up the cycle budget in case lle is used
-  // for hle, just gives all of the slice to hle
-
-  int cycles = static_cast<int>(DSP::GetDSPEmulator()->DSP_UpdateRate() + cyclesLate);
-  if (s_dsp_is_lle)
+  if (DSP::GetDSPEmulator()->WaitingForMail() && !s_new_mail)
   {
-    // use up the rest of the slice(if any)
-    s_dsp_emulator->DSP_Update(s_dsp_slice);
-    s_dsp_slice %= 6;
-    // note the new budget
-    s_dsp_slice += cycles;
+    s_dsp_running = false;
   }
   else
   {
-    s_dsp_emulator->DSP_Update(cycles);
-  }
+    // splits up the cycle budget in case lle is used
+    // for hle, just gives all of the slice to hle
 
-  CoreTiming::ScheduleEvent(DSP::GetDSPEmulator()->DSP_UpdateRate() - cyclesLate, s_et_DSP);
+    int cycles = static_cast<int>(DSP::GetDSPEmulator()->DSP_UpdateRate() + cyclesLate);
+    if (s_dsp_is_lle)
+    {
+      // use up the rest of the slice(if any)
+      s_dsp_emulator->DSP_Update(s_dsp_slice);
+      s_dsp_slice %= 6;
+      // note the new budget
+      s_dsp_slice += cycles;
+    }
+    else
+    {
+      s_dsp_emulator->DSP_Update(cycles);
+    }
+
+    CoreTiming::ScheduleEvent(DSP::GetDSPEmulator()->DSP_UpdateRate() - cyclesLate, s_et_DSP);
+    s_dsp_running = true;
+  }
+  s_new_mail = false;
 }
 
 static void CompleteARAM(u64 userdata, s64 cyclesLate)
@@ -212,6 +224,7 @@ void Init(bool hle)
   s_et_DSP = CoreTiming::RegisterEvent("DSPCallback", DSPCallback);
 
   CoreTiming::ScheduleEvent(0, s_et_DSP);
+  s_dsp_running = true;
 }
 
 void Reinit(bool hle)
@@ -296,8 +309,14 @@ void RegisterMMIO(MMIO::Mapping* mmio, u32 base)
                    }
                    return s_dsp_emulator->DSP_ReadMailBoxHigh(true);
                  }),
-                 MMIO::ComplexWrite<u16>(
-                     [](u32, u16 val) { s_dsp_emulator->DSP_WriteMailBoxHigh(true, val); }));
+                 MMIO::ComplexWrite<u16>([](u32, u16 val) {
+                   s_dsp_emulator->DSP_WriteMailBoxHigh(true, val);
+                   s_new_mail = true;
+                   if (!s_dsp_running && DSP::GetDSPEmulator()->WaitingForMail())
+                   {
+                     CoreTiming::ScheduleEvent(0, s_et_DSP);
+                   }
+                 }));
   mmio->Register(base | DSP_MAIL_TO_DSP_LO, MMIO::ComplexRead<u16>([](u32) {
                    return s_dsp_emulator->DSP_ReadMailBoxLow(true);
                  }),
@@ -309,6 +328,11 @@ void RegisterMMIO(MMIO::Mapping* mmio, u32 base)
                      s_dsp_emulator->DSP_Wait();
                      s_dsp_emulator->DSP_Update(DSP_MAIL_SLICE);
                      s_dsp_slice -= DSP_MAIL_SLICE;
+                   }
+                   s_new_mail = true;
+                   if (!s_dsp_running && DSP::GetDSPEmulator()->WaitingForMail())
+                   {
+                     CoreTiming::ScheduleEvent(0, s_et_DSP);
                    }
                    return s_dsp_emulator->DSP_ReadMailBoxHigh(false);
                  }),

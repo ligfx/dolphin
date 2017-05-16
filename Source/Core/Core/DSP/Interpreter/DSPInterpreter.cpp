@@ -154,6 +154,11 @@ int RunCyclesThread(int cycles)
       return cycles;
   }
 
+  // Don't end on an idle skip without running it once
+  while (Analyzer::GetCodeFlags(g_dsp.pc) & Analyzer::CODE_IDLE_SKIP)
+    if (!MovePastIdleSkip(cycles))
+      break;
+
   return cycles;
 }
 
@@ -172,6 +177,11 @@ int RunCycles(int cycles)
         return cycles;
     }
   }
+
+  // Don't end on an idle skip without running it once
+  while (Analyzer::GetCodeFlags(g_dsp.pc) & Analyzer::CODE_IDLE_SKIP)
+    if (!MovePastIdleSkip(cycles))
+      break;
 
   return cycles;
 }

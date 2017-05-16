@@ -30,6 +30,8 @@ public:
   void DoState(PointerWrap& p) override;
   void PauseAndLock(bool do_lock, bool unpause_on_unlock = true) override;
 
+  bool WaitingForMail() override;
+
   void DSP_WriteMailBoxHigh(bool cpu_mailbox, u16 value) override;
   void DSP_WriteMailBoxLow(bool cpu_mailbox, u16 value) override;
   u16 DSP_ReadMailBoxHigh(bool cpu_mailbox) override;
