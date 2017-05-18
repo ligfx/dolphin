@@ -317,10 +317,20 @@ void DSPLLE::DSP_Update(int cycles)
   }
   else
   {
-    // Wait for DSP thread to complete its cycle. Note: this logic should be thought through.
+    // Call after waiting for DSP thread to complete its cycle in DSP_Wait. Note: this logic should
+    // be thought through.
     s_ppc_event.Wait();
     m_cycle_count.fetch_add(dsp_cycles);
     s_dsp_event.Set();
+  }
+}
+
+void DSPLLE::DSP_Wait()
+{
+  if (m_is_running.IsSet())
+  {
+    s_ppc_event.Wait();
+    s_ppc_event.Set();
   }
 }
 
