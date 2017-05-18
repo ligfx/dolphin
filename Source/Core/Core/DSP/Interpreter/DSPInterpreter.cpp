@@ -10,6 +10,7 @@
 
 #include "Core/DSP/DSPAnalyzer.h"
 #include "Core/DSP/DSPCore.h"
+#include "Core/DSP/DSPHost.h"
 #include "Core/DSP/DSPMemoryMap.h"
 #include "Core/DSP/DSPTables.h"
 
@@ -103,129 +104,76 @@ void Step()
     HandleLoop();
 }
 
-// Used by thread mode.
+static bool RunSingleCycle(int& cycles_left)
+{
+  if (g_dsp.cr & CR_HALT)
+  {
+    cycles_left = 0;
+    return false;
+  }
+
+  if (g_dsp.external_interrupt_waiting && Host::OnThread())
+  {
+    DSPCore_CheckExternalInterrupt();
+    DSPCore_SetExternalInterrupt(false);
+  }
+
+// Seems to slow things down
+#if defined(_DEBUG) || defined(DEBUGFAST)
+  if (g_dsp_breakpoints.IsAddressBreakPoint(g_dsp.pc))
+  {
+    DSPCore_SetState(State::Stepping);
+    return false;
+  }
+#endif
+
+  Step();
+  cycles_left--;
+  return true;
+}
+
+static bool MovePastIdleSkip(int& cycles_left)
+{
+  u16 idle_start = g_dsp.pc;
+  // Largest seen: at 0x06c9 in ucode 2FCDF1EC (Four Swords), there is a nine-instruction idle loop
+  for (size_t i = 0; i < 32; i++)
+  {
+    if (!RunSingleCycle(cycles_left))
+      return false;
+    if (g_dsp.pc == idle_start)
+      return false;
+  }
+  return true;
+}
+
 int RunCyclesThread(int cycles)
 {
-  while (true)
+  while (cycles > 0)
   {
-    if (g_dsp.cr & CR_HALT)
-      return 0;
-
-    if (g_dsp.external_interrupt_waiting)
-    {
-      DSPCore_CheckExternalInterrupt();
-      DSPCore_SetExternalInterrupt(false);
-    }
-
-    Step();
-    cycles--;
-    if (cycles < 0)
-      return 0;
-  }
-}
-
-// This one has basic idle skipping, and checks breakpoints.
-int RunCyclesDebug(int cycles)
-{
-  // First, let's run a few cycles with no idle skipping so that things can progress a bit.
-  for (int i = 0; i < 8; i++)
-  {
-    if (g_dsp.cr & CR_HALT)
-      return 0;
-    if (g_dsp_breakpoints.IsAddressBreakPoint(g_dsp.pc))
-    {
-      DSPCore_SetState(State::Stepping);
+    if (!RunSingleCycle(cycles))
       return cycles;
-    }
-    Step();
-    cycles--;
-    if (cycles < 0)
-      return 0;
   }
 
-  while (true)
-  {
-    // Next, let's run a few cycles with idle skipping, so that we can skip
-    // idle loops.
-    for (int i = 0; i < 8; i++)
-    {
-      if (g_dsp.cr & CR_HALT)
-        return 0;
-      if (g_dsp_breakpoints.IsAddressBreakPoint(g_dsp.pc))
-      {
-        DSPCore_SetState(State::Stepping);
-        return cycles;
-      }
-      // Idle skipping.
-      if (Analyzer::GetCodeFlags(g_dsp.pc) & Analyzer::CODE_IDLE_SKIP)
-        return 0;
-      Step();
-      cycles--;
-      if (cycles < 0)
-        return 0;
-    }
-
-    // Now, lets run some more without idle skipping.
-    for (int i = 0; i < 200; i++)
-    {
-      if (g_dsp_breakpoints.IsAddressBreakPoint(g_dsp.pc))
-      {
-        DSPCore_SetState(State::Stepping);
-        return cycles;
-      }
-      Step();
-      cycles--;
-      if (cycles < 0)
-        return 0;
-      // We don't bother directly supporting pause - if the main emu pauses,
-      // it just won't call this function anymore.
-    }
-  }
+  return cycles;
 }
 
-// Used by non-thread mode. Meant to be efficient.
 int RunCycles(int cycles)
 {
-  // First, let's run a few cycles with no idle skipping so that things can
-  // progress a bit.
-  for (int i = 0; i < 8; i++)
+  while (cycles > 0)
   {
-    if (g_dsp.cr & CR_HALT)
-      return 0;
-    Step();
-    cycles--;
-    if (cycles < 0)
-      return 0;
-  }
-
-  while (true)
-  {
-    // Next, let's run a few cycles with idle skipping, so that we can skip
-    // idle loops.
-    for (int i = 0; i < 8; i++)
+    if (Analyzer::GetCodeFlags(g_dsp.pc) & Analyzer::CODE_IDLE_SKIP)
     {
-      if (g_dsp.cr & CR_HALT)
-        return 0;
-      // Idle skipping.
-      if (Analyzer::GetCodeFlags(g_dsp.pc) & Analyzer::CODE_IDLE_SKIP)
-        return 0;
-      Step();
-      cycles--;
-      if (cycles < 0)
-        return 0;
+      if (!MovePastIdleSkip(cycles))
+        return cycles;
     }
-
-    // Now, lets run some more without idle skipping.
-    for (int i = 0; i < 200; i++)
+    else
     {
-      Step();
-      cycles--;
-      if (cycles < 0)
-        return 0;
-      // We don't bother directly supporting pause - if the main emu pauses,
-      // it just won't call this function anymore.
+      if (!RunSingleCycle(cycles))
+        return cycles;
     }
   }
+
+  return cycles;
 }
 
 void nop(const UDSPInstruction opc)
