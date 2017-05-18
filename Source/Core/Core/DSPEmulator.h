@@ -27,9 +27,15 @@ public:
   virtual u16 DSP_ReadMailBoxLow(bool cpu_mailbox) = 0;
   virtual u16 DSP_ReadControlRegister() = 0;
   virtual u16 DSP_WriteControlRegister(u16 value) = 0;
-  virtual void DSP_Update(int cycles) = 0;
   virtual void DSP_StopSoundStream() = 0;
   virtual u32 DSP_UpdateRate() = 0;
+
+  // Give emulator additional cycles.
+  virtual void DSP_Update(int cycles) = 0;
+
+  // Wait for emulator to finish running allocated cycles.
+  // In non-threaded implementations, this should be a nop.
+  virtual void DSP_Wait() = 0;
 
 protected:
   bool m_wii = false;

@@ -170,6 +170,9 @@ static CoreTiming::EventType* s_et_CompleteARAM;
 // DSP/CPU timeslicing.
 static void DSPCallback(u64 userdata, s64 cyclesLate)
 {
+  // wait for last timeslice to finish (nop if running on same thread)
+  s_dsp_emulator->DSP_Wait();
+
   // splits up the cycle budget in case lle is used
   // for hle, just gives all of the slice to hle
 
@@ -287,6 +290,7 @@ void RegisterMMIO(MMIO::Mapping* mmio, u32 base)
   mmio->Register(base | DSP_MAIL_TO_DSP_HI, MMIO::ComplexRead<u16>([](u32) {
                    if (s_dsp_slice > DSP_MAIL_SLICE && s_dsp_is_lle)
                    {
+                     s_dsp_emulator->DSP_Wait();
                      s_dsp_emulator->DSP_Update(DSP_MAIL_SLICE);
                      s_dsp_slice -= DSP_MAIL_SLICE;
                    }
@@ -302,6 +306,7 @@ void RegisterMMIO(MMIO::Mapping* mmio, u32 base)
   mmio->Register(base | DSP_MAIL_FROM_DSP_HI, MMIO::ComplexRead<u16>([](u32) {
                    if (s_dsp_slice > DSP_MAIL_SLICE && s_dsp_is_lle)
                    {
+                     s_dsp_emulator->DSP_Wait();
                      s_dsp_emulator->DSP_Update(DSP_MAIL_SLICE);
                      s_dsp_slice -= DSP_MAIL_SLICE;
                    }

@@ -52,6 +52,10 @@ void DSPHLE::DSP_Update(int cycles)
     m_ucode->Update();
 }
 
+void DSPHLE::DSP_Wait()
+{
+}
+
 u32 DSPHLE::DSP_UpdateRate()
 {
   // AX HLE uses 3ms (Wii) or 5ms (GC) timing period
