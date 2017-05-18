@@ -36,9 +36,11 @@ public:
   u16 DSP_ReadMailBoxLow(bool cpu_mailbox) override;
   u16 DSP_ReadControlRegister() override;
   u16 DSP_WriteControlRegister(u16 value) override;
-  void DSP_Update(int cycles) override;
   void DSP_StopSoundStream() override;
   u32 DSP_UpdateRate() override;
+
+  void DSP_Update(int cycles) override;
+  void DSP_Wait() override;
 
 private:
   static void DSPThread(DSPLLE* dsp_lle);
