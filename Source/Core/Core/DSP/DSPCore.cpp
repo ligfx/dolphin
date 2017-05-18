@@ -249,12 +249,7 @@ int DSPCore_RunCycles(int cycles)
     switch (core_state)
     {
     case State::Running:
-// Seems to slow things down
-#if defined(_DEBUG) || defined(DEBUGFAST)
-      cycles = Interpreter::RunCyclesDebug(cycles);
-#else
       cycles = Interpreter::RunCycles(cycles);
-#endif
       break;
 
     case State::Stepping:
