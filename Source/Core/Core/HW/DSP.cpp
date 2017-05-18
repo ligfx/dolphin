@@ -173,7 +173,7 @@ static void DSPCallback(u64 userdata, s64 cyclesLate)
   // splits up the cycle budget in case lle is used
   // for hle, just gives all of the slice to hle
 
-  int cycles = static_cast<int>(DSP::GetDSPEmulator()->DSP_UpdateRate() - cyclesLate);
+  int cycles = static_cast<int>(DSP::GetDSPEmulator()->DSP_UpdateRate() + cyclesLate);
   if (s_dsp_is_lle)
   {
     // use up the rest of the slice(if any)
