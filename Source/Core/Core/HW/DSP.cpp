@@ -163,8 +163,32 @@ static void UpdateInterrupts();
 static void Do_ARAM_DMA();
 static void GenerateDSPInterrupt(u64 DSPIntType, s64 cyclesLate = 0);
 
+static CoreTiming::EventType* s_et_DSP;
 static CoreTiming::EventType* s_et_GenerateDSPInterrupt;
 static CoreTiming::EventType* s_et_CompleteARAM;
+
+// DSP/CPU timeslicing.
+static void DSPCallback(u64 userdata, s64 cyclesLate)
+{
+  // splits up the cycle budget in case lle is used
+  // for hle, just gives all of the slice to hle
+
+  int cycles = static_cast<int>(DSP::GetDSPEmulator()->DSP_UpdateRate() - cyclesLate);
+  if (s_dsp_is_lle)
+  {
+    // use up the rest of the slice(if any)
+    s_dsp_emulator->DSP_Update(s_dsp_slice);
+    s_dsp_slice %= 6;
+    // note the new budget
+    s_dsp_slice += cycles;
+  }
+  else
+  {
+    s_dsp_emulator->DSP_Update(cycles);
+  }
+
+  CoreTiming::ScheduleEvent(DSP::GetDSPEmulator()->DSP_UpdateRate() - cyclesLate, s_et_DSP);
+}
 
 static void CompleteARAM(u64 userdata, s64 cyclesLate)
 {
@@ -182,6 +206,9 @@ void Init(bool hle)
   Reinit(hle);
   s_et_GenerateDSPInterrupt = CoreTiming::RegisterEvent("DSPint", GenerateDSPInterrupt);
   s_et_CompleteARAM = CoreTiming::RegisterEvent("ARAMint", CompleteARAM);
+  s_et_DSP = CoreTiming::RegisterEvent("DSPCallback", DSPCallback);
+
+  CoreTiming::ScheduleEvent(0, s_et_DSP);
 }
 
 void Reinit(bool hle)
@@ -416,23 +443,6 @@ void GenerateDSPInterruptFromDSPEmu(DSPInterruptType type, int cycles_into_futur
 {
   CoreTiming::ScheduleEvent(cycles_into_future, s_et_GenerateDSPInterrupt, type,
                             CoreTiming::FromThread::ANY);
-}
-
-// called whenever SystemTimers thinks the DSP deserves a few more cycles
-void UpdateDSPSlice(int cycles)
-{
-  if (s_dsp_is_lle)
-  {
-    // use up the rest of the slice(if any)
-    s_dsp_emulator->DSP_Update(s_dsp_slice);
-    s_dsp_slice %= 6;
-    // note the new budget
-    s_dsp_slice += cycles;
-  }
-  else
-  {
-    s_dsp_emulator->DSP_Update(cycles);
-  }
 }
 
 // This happens at 4 khz, since 32 bytes at 4khz = 4 bytes at 32 khz (16bit stereo pcm)

@@ -80,6 +80,5 @@ void WriteARAM(u8 value, u32 address);
 u8* GetARAMPtr();
 
 void UpdateAudioDMA();
-void UpdateDSPSlice(int cycles);
 
 }  // end of namespace DSP
