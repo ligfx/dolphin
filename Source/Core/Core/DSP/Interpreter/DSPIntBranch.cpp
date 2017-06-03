@@ -26,6 +26,8 @@ void call(const UDSPInstruction opc)
 {
   // must be outside the if.
   u16 dest = dsp_fetch_code();
+  if (g_dsp.michael_print)
+    printf("call at %04x -> %04x\n", g_dsp.pc - 1, dest);
   if (CheckCondition(opc & 0xf))
   {
     dsp_reg_store_stack(StackRegister::Call, g_dsp.pc);

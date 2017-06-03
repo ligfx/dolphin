@@ -75,6 +75,7 @@ static bool VerifyRoms()
       rom_idx = static_cast<int>(i);
   }
 
+  printf("hash_irom %08x hash_drom %08x\n", hash_irom, hash_drom);
   if (rom_idx < 0)
   {
     if (AskYesNoT("Your DSP ROMs have incorrect hashes.\n"

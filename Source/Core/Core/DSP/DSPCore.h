@@ -312,6 +312,8 @@ struct SDSP
 
   // This one doesn't really belong here.
   u8* cpu_ram;
+
+  bool michael_print = false;
 };
 
 extern SDSP g_dsp;

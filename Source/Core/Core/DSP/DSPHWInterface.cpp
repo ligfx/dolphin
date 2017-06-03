@@ -274,6 +274,23 @@ static u16 _gdsp_ifx_read(u16 addr)
   }
 }
 
+static void PrintRegs()
+{
+  printf("== Registers ==\n");
+  printf("AR0:   %04x     AR1:   %04x     AR2:   %04x     AR3:   %04x\n", g_dsp.r.ar[0],
+         g_dsp.r.ar[1], g_dsp.r.ar[2], g_dsp.r.ar[3]);
+  printf("IX0:   %04x     IX1:   %04x     IX2:   %04x     IX3:   %04x\n", g_dsp.r.ix[0],
+         g_dsp.r.ix[1], g_dsp.r.ix[2], g_dsp.r.ix[3]);
+  printf("AX0.H: %04x     AX0.L: %04x     AX1.H: %04x     AX1.L: %04x\n", g_dsp.r.ax[0].h,
+         g_dsp.r.ax[0].l, g_dsp.r.ax[1].h, g_dsp.r.ax[1].l);
+  printf("AC0.H: %04x     AC0.M: %04x     AC0.L: %04x\n", g_dsp.r.ac[0].h, g_dsp.r.ac[0].m,
+         g_dsp.r.ac[0].l);
+  printf("AC1.H: %04x     AC1.M: %04x     AC1.L: %04x\n", g_dsp.r.ac[1].h, g_dsp.r.ac[1].m,
+         g_dsp.r.ac[1].l);
+  printf("PROD: %016llx\n", g_dsp.r.prod.val);
+  printf("SR: %04x\n", g_dsp.r.sr);
+}
+
 u16 gdsp_ifx_read(u16 addr)
 {
   u16 retval = _gdsp_ifx_read(addr);
@@ -297,6 +314,16 @@ static const u8* gdsp_idma_in(u16 dsp_addr, u32 addr, u32 size)
   Host::CodeLoaded(code, size);
   NOTICE_LOG(DSPLLE, "*** Copy new UCode from 0x%08x to 0x%04x (crc: %8x)", addr, dsp_addr,
              g_dsp.iram_crc);
+
+  // if (g_dsp.michael_print)
+  // {
+  //   PrintRegs();
+  // }
+  // g_dsp.michael_print = g_dsp.iram_crc == 0xdd7e72d5;
+  // if (g_dsp.michael_print)
+  // {
+  //   PrintRegs();
+  // }
 
   return reinterpret_cast<u8*>(dst);
 }
@@ -354,8 +381,9 @@ static const u8* gdsp_ddma_in(u16 dsp_addr, u32 addr, u32 size)
           Common::swap16(*(const u16*)&g_dsp.cpu_ram[(addr + i) & 0x7FFFFFFF]);
     }
   }
-  DEBUG_LOG(DSPLLE, "*** ddma_in RAM (0x%08x) -> DRAM_DSP (0x%04x) : size (0x%08x)", addr,
-            dsp_addr / 2, size);
+  if (g_dsp.michael_print)
+    printf("*** ddma_in RAM (0x%08x) -> DRAM_DSP (0x%04x) : size (0x%08x)\n", addr, dsp_addr / 2,
+           size);
 
   return dst + dsp_addr;
 }
@@ -379,8 +407,9 @@ static const u8* gdsp_ddma_out(u16 dsp_addr, u32 addr, u32 size)
     }
   }
 
-  DEBUG_LOG(DSPLLE, "*** ddma_out DRAM_DSP (0x%04x) -> RAM (0x%08x) : size (0x%08x)", dsp_addr / 2,
-            addr, size);
+  if (g_dsp.michael_print)
+    printf("*** ddma_out DRAM_DSP (0x%04x) -> RAM (0x%08x) : size (0x%08x)\n", dsp_addr / 2, addr,
+           size);
 
   return src + dsp_addr;
 }
@@ -399,10 +428,11 @@ static void gdsp_do_dma()
               g_dsp.pc, ctl, addr, dsp_addr, len);
     exit(0);
   }
-#if defined(_DEBUG) || defined(DEBUGFAST)
-  DEBUG_LOG(DSPLLE, "DMA pc: %04x, Control: %04x, Address: %08x, DSP Address: %04x, Size: %04x",
-            g_dsp.pc, ctl, addr, dsp_addr, len);
-#endif
+  // #if defined(_DEBUG) || defined(DEBUGFAST)
+  if (g_dsp.michael_print)
+    printf("DMA pc: %04x, Control: %04x, Address: %08x, DSP Address: %04x, Size: %04x\n", g_dsp.pc,
+           ctl, addr, dsp_addr, len);
+  // #endif
 
   const u8* copied_data_ptr = nullptr;
   switch (ctl & 0x3)
