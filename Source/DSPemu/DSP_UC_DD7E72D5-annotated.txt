@@ -1,0 +1,664 @@
+exception_handlers:
+// 0000 0000      nop
+// 0001 0000      nop
+// 0002 0000      nop
+// 0003 0000      nop
+// 0004 0000      nop
+// 0005 0000      nop
+// 0006 0000      nop
+// 0007 0000      nop
+// 0008 0000      nop
+// 0009 0000      nop
+// 000a 0000      nop
+// 000b 0000      nop
+// 000c 0000      nop
+// 000d 0021      halt
+// 000e 02ff      rti
+// 000f 0021      halt
+
+main:
+// 0010 1306      sbset       #0x06
+// 0011 1203      sbclr       #0x03
+// 0012 1204      sbclr       #0x04
+// 0013 1305      sbset       #0x05
+// 0014 0092 00ff lri         $CR, #0x00ff
+// 0016 0088 ffff lri         $WR0, #0xffff
+// 0018 0089 ffff lri         $WR1, #0xffff
+// 001a 008a ffff lri         $WR2, #0xffff
+// 001c 008b ffff lri         $WR3, #0xffff
+// 001e 8f00      set40
+// 001f 8b00      m0
+// 0020 8c00      clr15
+
+// step 1: context setup
+// 0021 02bf 807e call        wait_for_dsp_mbox_807e
+// 0023 16fc dcd1 si          @DMBH, #0xdcd1
+// 0025 16fd 0000 si          @DMBL, #0x0000
+// 0027 16fb 0001 si          @DIRQ, #0x0001
+WaitForDSPMailbox();
+PushMail(DSP_INIT);
+
+// wait for cpu mail 0xabbaxxxx
+// +>0029 02bf 8078 call        wait_for_cpu_mbox_8078
+// | 002b 24ff      lrs         $AC0.L, @CMBL
+// | 002c 0280 abba cmpi        $AC0.M, #0xabba
+// +-002e 0294 0029 jnz         0x0029
+
+// Looks like wait_for_cpu_mbox() puts CMBH into AC0.M
+while (true) {
+  init_mail = wait_for_cpu_mbox();
+  if (init_mail.hi & 0xabba) break;
+  AC0.L = init_mail.lo;
+}
+// Why is the low part of this mail being saved?
+
+// Next mail has the mram addr of the data to fetch
+// 0030 8e00      set16
+// 0031 02bf 8078 call        wait_for_cpu_mbox_8078
+// 0033 20ff      lrs         $AX0.L, @CMBL
+// 0034 0240 0fff andi        $AC0.M, #0x0fff
+// 0036 1f5e      mrr         $AX0.H, $AC0.M
+addr_mail = wait_for_cpu_mbox();
+AX0.L = addr_mail.lo;
+AC0.M = addr_mail.hi;
+AC0.M &= 0x0fff;
+AX0.H = AC0.M;
+
+// assuming this puts something into AC0.M? or AX0.H is a parameter to
+// 0x80bc.
+0037 009b 0000 lri         $AX1.H, #0x0000 // DRAM addr
+0039 0099 0020 lri         $AX1.L, #0x0020 // length in bytes
+003b 0087 0000 lri         $IX3, #0x0000 // no ucode/iram upload
+003d 0080 0041 lri         $AR0, #0x0041 // return addr after DRAM upload
+003f 029f 80bc jmp         0x80bc // DRAM upload!
+
+// step 2: got data from CPU, before going into ProcessGBACrypto
+// 0041 02bf 008c call        ProcessGBACrypto
+// 0043 02bf 807e call        wait_for_dsp_mbox_807e // loop until DSP->CPU mailbox is empty
+// 0045 16fc dcd1 si          @DMBH, #0xdcd1
+// 0047 16fd 0003 si          @DMBL, #0x0003 // 0xdcd10003 = DSP_DONE
+// 0049 16fb 0001 si          @DIRQ, #0x0001
+ProcessGBACrypto();
+WaitForDSPMailbox();
+PushMail(DSP_DONE);
+
+004b 8f00      set40
+// wait for CPU to tell us what to do after calc'ing
+while (true) {
+  mail = wait_for_dsp_mbox()
+}
++>+>004c 02bf 8078 call        wait_for_cpu_mbox_8078 // this is like, wait for CPU->DSP mail?
+| | 004e 0280 cdd1 cmpi        $AC0.M, #0xcdd1
+| +-0050 0294 004c jnz         0x004c
+|   0052 26ff      lrs         $AC0.M, @CMBL
+|   0053 0280 0001 cmpi        $AC0.M, #0x0001
++-|---0055 0295 005e jz          PrepareBootUcode // if CPU->DSP mail was 0xcdd10001
+| |   0057 0280 0002 cmpi        $AC0.M, #0x0002
+| |   0059 0295 8000 jz          0x8000 // DSP reset
+| +---005b 029f 004c jmp         0x004c
+|     005d 0021      halt
+|
++---->PrepareBootUcode:
+005e 8e00      set16
+005f 02bf 8078 call        wait_for_cpu_mbox_8078
+0061 24ff      lrs         $AC0.L, @CMBL
+0062 02bf 8078 call        wait_for_cpu_mbox_8078
+0064 24ff      lrs         $AC0.L, @CMBL
+0065 02bf 8078 call        wait_for_cpu_mbox_8078
+0067 24ff      lrs         $AC0.L, @CMBL
+0068 02bf 8078 call        wait_for_cpu_mbox_8078
+006a 00c5 ffff lr          $IX1, @CMBL
+006c 0240 0fff andi        $AC0.M, #0x0fff
+006e 1c9e      mrr         $IX0, $AC0.M
+006f 02bf 8078 call        wait_for_cpu_mbox_8078
+0071 00c7 ffff lr          $IX3, @CMBL
+0073 02bf 8078 call        wait_for_cpu_mbox_8078
+0075 00c6 ffff lr          $IX2, @CMBL
+0077 02bf 8078 call        wait_for_cpu_mbox_8078
+0079 00c0 ffff lr          $AR0, @CMBL
+007b 02bf 8078 call        wait_for_cpu_mbox_8078
+007d 20ff      lrs         $AX0.L, @CMBL
+007e 0240 0fff andi        $AC0.M, #0x0fff
+0080 1f5e      mrr         $AX0.H, $AC0.M
+0081 02bf 8078 call        wait_for_cpu_mbox_8078
+0083 21ff      lrs         $AX1.L, @CMBL
+0084 02bf 8078 call        wait_for_cpu_mbox_8078
+0086 23ff      lrs         $AX1.H, @CMBL
+0087 1205      sbclr       #0x05
+0088 1206      sbclr       #0x06
+0089 029f 80b5 jmp         BootUCode
+008b 0021      halt
+
+ProcessGBACrypto:
+// 008c 8100      clr         $ACC0
+// 008d 0081 0010 lri         $AR1, #0x0010
+// 008f 1020      loopi       #0x20
+//   0090 1b3e      srri        @$AR1, $AC0.M
+// 0091 00df 1456 lr          $AC1.M, @0x1456
+// 0093 0340 ffd0 andi        $AC1.M, #0xffd0
+// 0095 8417      clrp'mv     : $AX1.L, $AC1.M
+// 0096 0080 0000 lri         $AR0, #0x0000
+// 0098 0086 0000 lri         $IX2, #0x0000
+// 009a 0082 001f lri         $AR2, #0x001f
+// 009c 00de 15f6 lr          $AC0.M, @0x15f6
+// 009e 1408      lsl         $ACC0, #8
+// 009f 00df 1766 lr          $AC1.M, @0x1766
+// 00a1 0340 00ff andi        $AC1.M, #0x00ff
+// 00a3 1f5f      mrr         $AX0.H, $AC1.M
+// 00a4 02bf 88e5 call        0x88e5
+
+// Input data is in 0x0-0x10, zero out 0x10–0x2f inclusive
+// dsp dmem write 0010 = 0000
+// dsp dmem write 0011 = 0000
+// dsp dmem write 0012 = 0000
+// dsp dmem write 0013 = 0000
+// dsp dmem write 0014 = 0000
+// dsp dmem write 0015 = 0000
+// dsp dmem write 0016 = 0000
+// dsp dmem write 0017 = 0000
+// dsp dmem write 0018 = 0000
+// dsp dmem write 0019 = 0000
+// dsp dmem write 001a = 0000
+// dsp dmem write 001b = 0000
+// dsp dmem write 001c = 0000
+// dsp dmem write 001d = 0000
+// dsp dmem write 001e = 0000
+// dsp dmem write 001f = 0000
+// dsp dmem write 0020 = 0000
+// dsp dmem write 0021 = 0000
+// dsp dmem write 0022 = 0000
+// dsp dmem write 0023 = 0000
+// dsp dmem write 0024 = 0000
+// dsp dmem write 0025 = 0000
+// dsp dmem write 0026 = 0000
+// dsp dmem write 0027 = 0000
+// dsp dmem write 0028 = 0000
+// dsp dmem write 0029 = 0000
+// dsp dmem write 002a = 0000
+// dsp dmem write 002b = 0000
+// dsp dmem write 002c = 0000
+// dsp dmem write 002d = 0000
+// dsp dmem write 002e = 0000
+// dsp dmem write 002f = 0000
+memset((void*)0x10, 0, 0x20);
+
+// what does this do? loading a key maybe?
+// magic numbers:
+// dsp dmem read 1456 = 102f
+// dsp dmem read 15f6 = 7f65
+// dsp dmem read 1766 = 0273
+AC0 = PROD = AR0 = IX2 = 0;
+AR1 = 0x10;``
+AR2 = 0x1f;
+AX1.L = *0x1456 * 0xffd0;
+AC0.M = *0x15f6 << 8;
+AX0.H = AC1.M = *0x1766 & 0xff;
+// touched by 0x88e5():
+// dsp dmem read 001f = 0000
+// dsp dmem read 0020 = 0000
+// dsp dmem write 001f = 6573
+// dsp dmem write 0020 = 0000
+(*0x88e5)();
+
+// 00a6 1f1c      mrr         $AX0.L, $AC0.L
+// 00a7 811e      clr'mv      $ACC0 : $AX1.H, $AC0.M
+AX0.L = AC0.L;
+AX1.H = AC0.M;
+AC0 = 0;
+
+// 00a8 191e      lrri        $AC0.M, @$AR0 // challenge part two?
+// 00a9 1478      lsr         $ACC0, #-8
+// 00aa 1ffc      mrr         $AC1.M, $AC0.L
+// 00ab 1f5e      mrr         $AX0.H, $AC0.M
+// AR0 should still be 0 after 88e5, so this is part of the nonce challenge
+// 00ac 02bf 8809 call        0x8809
+// 00ae 02bf 8723 call        0x8723
+// 00b0 0006      dar         $AR2
+// 00b1 8106      clr'dr      $ACC0 : $AR2
+// 00b2 00de 166c lr          $AC0.M, @0x166c
+// 00b4 1404      lsl         $ACC0, #4
+// 00b5 0240 ff00 andi        $AC0.M, #0xff00
+// 00b7 00df 1231 lr          $AC1.M, @0x1231
+// 00b9 1578      lsr         $ACC1, #-8
+// 00ba 0340 00ff andi        $AC1.M, #0x00ff
+// 00bc 1f5f      mrr         $AX0.H, $AC1.M
+// 00bd 02bf 88e5 call        0x88e5
+
+// dsp dmem read 0000 = cbbb
+AC0.M = *AR0 // nonce challenge
+AC0 = AC0 >> 8
+AX0.H = AC0.M;
+AR0++;
+AC1.M = AC0.L; // should be 0 from the CLR above, right?
+// touched by the following functions:
+// dsp dmem write 0020 = 0000
+// dsp dmem write 0020 = bbcb
+(*0x8809)();
+// dsp dmem write 0021 = deb8
+(*0x8723)();
+AR2 -= 2;
+AC0 = 0
+
+// magic numbers:
+// dsp dmem read 166c = 06f2
+// dsp dmem read 1231 = 64fc
+AC0.M = (*0x166c << 4) & 0xff00;
+AX0.H = AC1.M = (*0x1231 >> 8) & 0x00ff;
+// dsp dmem read 001e = 0000
+// dsp dmem read 001f = 6573
+// dsp dmem write 001e = 6f64
+// dsp dmem write 001f = 6573
+(*0x88e5)();
+
+// 00bf 1f1c      mrr         $AX0.L, $AC0.L
+// 00c0 811e      clr'mv      $ACC0 : $AX1.H, $AC0.M
+// TODO: I'm assuming these happen in parallel, so this is a correct
+// linearization?
+// 00c1 191e      lrri        $AC0.M, @$AR0 // challenge part one?
+// 00c2 1478      lsr         $ACC0, #-8
+// 00c3 1ffc      mrr         $AC1.M, $AC0.L
+// 00c4 1f5e      mrr         $AX0.H, $AC0.M
+// 00c5 02bf 8809 call        0x8809
+// 00c7 02bf 8723 call        0x8723
+AX0.L = AC0.L;
+AX1.H = AC0.M;
+AC0 = 0;
+// AR0 should be 1 from before if it isn't affected by 0x8809, 0x8723, or 0x88e5
+// so this is the other part of the nonce challenge
+// dsp dmem read 0001 = 7726
+AX0.H = AC0.M = abs(*AR0 >> 8); // nonce challenge
+AR0++;
+AC1.M = AC0.L;
+// dsp dmem write 001f = 6573
+// dsp dmem write 001f = 2677
+(*0x8809)();
+// dsp dmem write 0020 = 4913
+(*0x8723)();
+
+// 00c9 8100      clr         $ACC0
+// 00ca 8900      clr         $ACC1
+AC0 = 0;
+AC1 = 0;
+
+// 00cb 00d1 0005 lr          $AC1.H, @0x0005 // logo speed
+// 00cd 9900      asr16       $ACC1
+// TODO: what does this do? read 8 bits and move it down to AC1.M?
+// dsp dmem read 0005 = 0002
+AC1.H = *0x05;
+AC1 = sgn(AC1) * (AC1 >> 16);
+
+// 00ce 8200      cmp
+// 00cf 0295 00e5 jz          0x00e5
+if AC1 == 0 {
+  // 00e5 0082 0011 lri         $AR2, #0x0011
+  // 00e7 00df 0003 lr          $AC1.M, @0x0003 // logo palette
+  // 00e9 1501      lsl         $ACC1, #1
+  // 00ea 1f5f      mrr         $AX0.H, $AC1.M
+  // 00eb 00de 1043 lr          $AC0.M, @0x1043
+  // 00ed 0240 fff0 andi        $AC0.M, #0xfff0
+  // 00ef 02bf 88e5 call        0x88e5
+  // 00f1 029f 0102 jmp         0x0102
+  AX0.H = AC1.M = (*0x3) * 2; // logo palette
+  AC0.M = *0x1043 & 0xfff0;
+
+  AR2 = 0x011;
+  (*0x88e5)(); // should do (logo_palette * 2) | 0x70
+}
+// 00d1 0291 00f3 jl          0x00f3
+else if AC1 > 0 {
+  // 00f3 0082 0010 lri         $AR2, #0x0010
+  // 00f5 0086 0001 lri         $IX2, #0x0001
+  // 00f7 00d0 1285 lr          $AC0.H, @0x1285
+  // 00f9 9100      asr16       $ACC0
+  // 00fa 4d00      add         $ACC1, $ACC0
+  // 00fb 1501      lsl         $ACC1, #1
+  // 00fc 00de 0003 lr          $AC0.M, @0x0003 // logo palette
+  // 00fe 1404      lsl         $ACC0, #4
+  // 00ff 1f5e      mrr         $AX0.H, $AC0.M
+  // 0100 02bf 8809 call        0x8809
+
+  // dsp dmem read 1285 = 5aff
+  AC0.H = *0x1285;
+  AC0 = sgn(AC0) * (AC0 >> 16);
+
+  // GBA.cpp says (logo_speed - 1) * 2
+  // okay, I'm not understanding the math, but presumably AC0 is -1
+  AC1 = (AC1 + AC0) * 2; // AC1 from above is logo speed
+  // dsp dmem read 0003 = 0002
+  AX0.H = AC0.M = *0x3 << 4; // logo palette
+
+  AR2 = 0x10;
+  IX2 = 0x1;
+  // dsp dmem write 0010 = 0000
+  // dsp dmem write 0011 = 0022
+  // should do ((logo_speed - 1) * 2) | (logo_palette << 4)
+  //
+  (*0x8809)();
+}
+else {
+  // 00d3 0082 0010 lri         $AR2, #0x0010
+  // 00d5 0086 0001 lri         $IX2, #0x0001
+  // 00d7 00d0 171b lr          $AC0.H, @0x171b
+  // 00d9 9100      asr16       $ACC0
+  // 00da 7d00      neg         $ACC1
+  // 00db 4d00      add         $ACC1, $ACC0
+  // 00dc 1501      lsl         $ACC1, #1
+  // 00dd 1f5f      mrr         $AX0.H, $AC1.M
+  // 00de 00df 0003 lr          $AC1.M, @0x0003 // logo palette
+  // 00e0 1504      lsl         $ACC1, #4
+  // 00e1 02bf 8809 call        0x8809
+  // 00e3 029f 0102 jmp         0x0102
+
+  AC0.H = *0x171b;
+  AC0 = sgn(AC0) * AC0 >> 16;
+
+  // GBA.cpp says this should be (-logo_speed + 2) * 2
+  AC1 = (-AC1 + AC0) << 1; // AC1 from above is logo speed
+  AX0.H = AC1.M;
+  AC1.M = *0x3 << 4; // logo palette
+
+  AR2 = 0x10;
+  IX2 = 0x1;
+  // should do ((-logo_speed + 2) * 2) | (logo_palette << 4)
+  (*0x8809)();
+
+}
+
+// 0102 0083 0013 lri         $AR3, #0x0013
+// 0104 1b7e      srri        @$AR3, $AC0.M
+// 0105 8923      clr's       $ACC1 : @$AR3, $AC0.L
+// 0106 0083 0013 lri         $AR3, #0x0013
+// dsp dmem write 0013 = 0020
+// dsp dmem write 0014 = 0000
+*0x13 = AC0.M;
+*0x14 = AC0.L;
+AC1 = 0;
+AR3 = 0x13;
+
+// 0108 00df 0007 lr          $AC1.M, @0x0007 // joyboot length lo
+// dsp dmem read 0007 = 829c
+AC1.M = *0x7; // joyboot length lo
+// 010a 00de 11b8 lr          $AC0.M, @0x11b8
+// 010c 0240 fff0 andi        $AC0.M, #0xfff0
+// 010e 1f5e      mrr         $AX0.H, $AC0.M
+// dsp dmem read 11b8 = 007f
+AX0.H = AC0.M = *0x11b8 & 0xfff0;
+
+// 010f 02bf 81f4 call        0x81f4 // ?
+// 0111 f100      lsl16       $ACC1
+// 0112 02bf 8458 call        0x8458 // ?
+// dsp dmem write 0013 = 0000
+// dsp dmem write 0014 = 829c
+(*0x81f4)();
+AC1 << 16;
+// dsp dmem write 0015 = 0000
+// dsp dmem write 0016 = 82a3
+(*0x8458)();
+
+0114 8f00      set40
+// 0115 0082 0015 lri         $AR2, #0x0015
+// 0117 00de 0006 lr          $AC0.M, @0x0006 // joyboot length hi
+// 0119 00da 165b lr          $AX0.H, @0x165b
+// 011b 02bf 88e5 call        0x88e5 // ?
+AR2 = 0x15
+// dsp dmem read 0006 = 0000
+// dsp dmem read 165b = 0000
+AC0.M = *0x6; // joyboot length hi
+AX0.H = *0x165b;
+// dsp dmem read 0015 = 0000
+// dsp dmem read 0016 = 82a3
+// dsp dmem write 0015 = 0000
+// dsp dmem write 0016 = 82a3
+(*0x88e5)();
+
+// 011d 14fd      asr         $ACC0, #-3
+// 011e 1403      lsl         $ACC0, #3
+AC0 = sgn(AC0) * (AC0 >> 3);
+AC0 << 3;
+
+// 011f 1b5e      srri        @$AR2, $AC0.M
+// 0120 1b5c      srri        @$AR2, $AC0.L
+// AR2 will be 0x16 I think?
+// dsp dmem write 0016 = 0000
+// dsp dmem write 0017 = 82a0
+*AR2++ = AC0.M;
+*AR2++ = AC0.L;
+
+// 0121 0082 0016 lri         $AR2, #0x0016
+// 0123 00de 1723 lr          $AC0.M, @0x1723
+// 0125 14f4      asr         $ACC0, #-12
+// 0126 00da 166b lr          $AX0.H, @0x166b
+// 0128 02bf 88e5 call        0x88e5 // ?
+// dsp dmem read 1723 = ffe0
+// dsp dmem read 166b = 0000
+AR2 = 0x16;
+AC0.M = *0x1723;
+AC0 = sgn(AC0) * (AC0 >> 12);
+AX0.H = *0x166b;
+// dsp dmem read 0016 = 0000
+// dsp dmem read 0017 = 82a0
+// dsp dmem write 0016 = 0000
+// dsp dmem write 0017 = 80a0
+(*0x88e5)();
+
+// this next bit takes a lot of time to basically set AC0 to some magic
+// number
+
+//   012a b100      tst         $ACC0
+// +-012b 0290 012e jge         0x012e
+// | 012d 8100      clr         $ACC0
+// +>012e 14fd      asr         $ACC0, #-3
+AC0 = max(AC0, 0);
+AC0 = sgn(AC0) * (AC0 >> 3);
+
+012f 8e00      set16
+// 0130 00df 1491 lr          $AC1.M, @0x1491
+// 0132 0340 d0f0 andi        $AC1.M, #0xd0f0
+// 0134 1cbf      mrr         $IX1, $AC1.M
+// some magic number
+// dsp dmem read 1491 = 6a0f
+IX1 = *0x1491 & 0xd0f0
+
+// 0135 00df 1468 lr          $AC1.M, @0x1468
+// 0137 00d1 11fc lr          $AC1.H, @0x11fc
+// 0139 157c      lsr         $ACC1, #-4
+// 013a 1cdf      mrr         $IX2, $AC1.M
+// some magic number
+// dsp dmem read 1468 = f808
+// dsp dmem read 11fc = 0003
+AC1.M = *0x1468;
+AC1.H = *0x11fc;
+AC1 = abs(AC1 >> 4)
+IX2 = AC1.M;
+
+// 013b 00d1 11b8 lr          $AC1.H, @0x11b8
+// 013d 9900      asr16       $ACC1
+// dsp dmem read 11b8 = 007f
+AC1.H = *0x11b8;
+AC1 = sgn(AC1) * (AC1 >> 16);
+
+// 013e 1418      lsl         $ACC0, #24
+// 013f 1478      lsr         $ACC0, #-8
+// 0140 1f5e      mrr         $AX0.H, $AC0.M
+// 0141 1ffe      mrr         $AC1.M, $AC0.M
+AC0 = abs((AC0 << 24) >> 8);
+AC1.M = AX0.H = AC0.M;
+
+// 0142 1f65      mrr         $AX1.H, $IX1
+// 0143 3600      andr        $AC0.M, $AX1.H
+// 0144 1402      lsl         $ACC0, #2
+AX1.H = IX1; // from above, IX1 = *0x1491 & 0xd0f0
+AC0.M &= AX1.H;
+AC0 << 2;
+
+// 0145 1f66      mrr         $AX1.H, $IX2
+// 0146 3700      andr        $AC1.M, $AX1.H
+// 0147 1501      lsl         $ACC1, #1
+// 0148 4c00      add         $ACC0, $ACC1
+// 0149 1518      lsl         $ACC1, #24
+// 014a 9900      asr16       $ACC1
+// 014b 3500      andr        $AC1.M, $AX0.H
+// 014c 4c00      add         $ACC0, $ACC1
+AX1.H = IX2; // from above, IX2 is magic
+AC1.M &= AX1.H;
+AC1 <<= 1;
+AC0 = AC1;
+AC1 <<= 24;
+AC1 = sgn(AC1) * (AC1 >> 16)
+AC1.M &= AX0.H;
+AC0 += AC1;
+
+// 014d 00df 0012 lr          $AC1.M, @0x0012
+// 014f 3f00      orc         $AC1.M, $AC0.M
+// 0150 00ff 0012 sr          @0x0012, $AC1.M
+// hmm, what did we write to 0x12? possible nonce challenge stuff?
+// dsp dmem read 0012 = 0000
+// dsp dmem write 0012 = 2014
+*0x12 |= AC0.M; // AC0 is magic
+
+// 0152 1470      lsr         $ACC0, #-16
+// 0153 00df 0011 lr          $AC1.M, @0x0011
+// we wrote the logo palette speed thing to 0x11
+// 0155 3f00      orc         $AC1.M, $AC0.M
+// 0156 00ff 0011 sr          @0x0011, $AC1.M
+// dsp dmem read 0011 = 0022
+// dsp dmem write 0011 = 0022
+AC0 = abs(AC0 >> 16)
+*0x11 |= AC0.M;
+
+// 0158 1fa5      mrr         $AC1.L, $IX1
+// 0159 1501      lsl         $ACC1, #1
+// 015a 1fe6      mrr         $AC1.M, $IX2
+// 015b f100      lsl16       $ACC1
+// 015c 15f8      asr         $ACC1, #-8
+// 015d f500      lsr16       $ACC1
+// 015c 15f8      asr         $ACC1, #-8
+// 015d f500      lsr16       $ACC1
+// IX1 and IX2 are magic numbers, from above
+AC1.L = IX1;
+AC1 <<= 1;
+AC1.M = IX2;
+// why the repetition?
+AC1 <<= 16;
+AC1 = sgn(AC1) * (AC1 >> 8);
+AC1 <<= 16;
+AC1 = sgn(AC1) * (AC1 >> 8);
+AC1 <<= 16;
+
+// 015e 1f5f      mrr         $AX0.H, $AC1.M
+// 015f 1f7d      mrr         $AX1.H, $AC1.L
+// 0160 8100      clr         $ACC0
+AX0.H = AC1.M;
+AX1.H = AC1.L;
+AC0 = 0;
+
+// what did we originally write to 0x11?
+// 0161 00de 0011 lr          $AC0.M, @0x0011
+// 0163 3400      andr        $AC0.M, $AX0.H
+// 0164 8900      clr         $ACC1
+// 0165 00df 0012 lr          $AC1.M, @0x0012
+// 0167 3500      andr        $AC1.M, $AX0.H
+// 0168 4c00      add         $ACC0, $ACC1
+// 0169 00df 0012 lr          $AC1.M, @0x0012
+// 016b 1578      lsr         $ACC1, #-8
+// 016c 4c00      add         $ACC0, $ACC1
+// 016d 8900      clr         $ACC1
+// 016e 1ffe      mrr         $AC1.M, $AC0.M
+// 016f 1508      lsl         $ACC1, #8
+// 0170 3b00      orr         $AC1.M, $AX1.H
+// dsp dmem read 0011 = 0022
+// dsp dmem read 0012 = 2014
+// dsp dmem read 0012 = 2014
+AC0.M = *0x11 & AX0.H;
+
+AC1 = 0;
+AC1.M = *0x12 & AX0.H;
+AC0 += AC1;
+
+AC1.M = *0x12;
+AC1 = abs(AC1 >> 8);
+AC0 += AC1;
+
+AC1 = 0;
+AC1.M = AC0.M;
+AC1 <<= 8;
+AC1.M |= AX1.H;
+
+// 0171 00de 0011 lr          $AC0.M, @0x0011
+// 0173 3e00      orc         $AC0.M, $AC1.M
+// 0174 00df 0012 lr          $AC1.M, @0x0012
+// 0176 3b00      orr         $AC1.M, $AX1.H
+// dsp dmem read 0011 = 0022
+// dsp dmem read 0012 = 2014
+AC0.M = *0x11 | AC1.M; // could be calculating palette_speed_coded ?
+AC1.M = *0x12 | AX1.H;
+
+// 0177 1cbf      mrr         $IX1, $AC1.M
+// 0178 00da 15f1 lr          $AX0.H, @0x15f1
+// 017a 3500      andr        $AC1.M, $AX0.H
+
+IX1 = AC1.M;
+// dsp dmem read 15f1 = 0200
+AX0.H = *0x15f1; // is this 0x200? yes it is!
+AC1.M &= AX0.H;
+
+// Wrap with 'Kawa' or 'sedo'?
+// 017b 0295 0192 jz          0x0192
+if (AC1.M == 0) {
+  // dsp dmem read 10ca = 3461
+  0192 00df 10ca lr          $AC1.M, @0x10ca
+  0194 1508      lsl         $ACC1, #8
+  0195 1f5f      mrr         $AX0.H, $AC1.M
+  // dsp dmem read 1043 = 0076
+  0196 00df 1043 lr          $AC1.M, @0x1043
+  0198 7500      incm        $AC1.M
+  0199 3900      orr         $AC1.M, $AX0.H
+  019a 3080      xorc        $AC0.M, $AC1.M
+  // dsp dmem write 0022 = b7d5
+  // dsp dmem read 1259 = 6143
+  // dsp dmem read 16fe = 0008
+  019b 00fe 0022 sr          @0x0022, $AC0.M
+  019d 00dc 1259 lr          $AC0.L, @0x1259
+  019f 00dd 16fe lr          $AC1.L, @0x16fe
+  01a1 4c00      add         $ACC0, $ACC1
+  01a2 f000      lsl16       $ACC0
+  01a3 1fe5      mrr         $AC1.M, $IX1
+  01a4 3080      xorc        $AC0.M, $AC1.M
+} else {
+  017d 00df 10e2 lr          $AC1.M, @0x10e2
+  017f 1508      lsl         $ACC1, #8
+  0180 1f5f      mrr         $AX0.H, $AC1.M
+  0181 00df 103b lr          $AC1.M, @0x103b
+  0183 7900      decm        $AC1.M
+  0184 3900      orr         $AC1.M, $AX0.H
+  0185 3080      xorc        $AC0.M, $AC1.M
+  0186 00fe 0022 sr          @0x0022, $AC0.M
+  0188 00dc 1229 lr          $AC0.L, @0x1229
+  018a 00dd 11f8 lr          $AC1.L, @0x11f8
+  018c 5c00      sub         $ACC0, $ACC1
+  018d f000      lsl16       $ACC0
+  018e 1fe5      mrr         $AC1.M, $IX1
+  018f 3080      xorc        $AC0.M, $AC1.M
+  // 0190 029f 01a5 jmp         0x01a5
+}
+
+// 01a5 00fe 0023 sr          @0x0023, $AC0.M
+// dsp dmem write 0023 = c1df
+*0x23 = AC0.M;
+
+// dsp dmem read 0008 = 804b
+// dsp dmem read 0009 = 9ac0
+lr          $AX0.H, @0x0008 // param: dest addr
+lr          $AX0.L, @0x0009 // param: dest addr
+lri         $AX1.H, #0x0020 // from DRAM 0x20
+ // 8 bytes (e.g. the two kawasedo shorts, and the two challenge nonce reply shorts from further above)
+lri         $AX1.L, #0x0008
+lri         $IX3, #0x0000 // ?
+// dsp dmem write ffce(DSMAH) = 804b
+// dsp dmem write ffcf(DSMAL) = 9ac0
+// dsp dmem write ffc9(DSCR) = 0001
+// dsp dmem write ffcd(DSPA) = 0020
+// dsp dmem write ffcb(DSBL) = 0008
+// dsp dmem read ffc9(DSCR) = 0001
+call        0x808b // DMA-like function, writing back to host RAM?
+ret

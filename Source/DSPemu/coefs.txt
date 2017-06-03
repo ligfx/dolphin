@@ -1,0 +1,90 @@
+# Nintendo
+0x103b = 0065
+0x1043 = 0076
+0x10ca = 3461
+0x10e2 = 376f
+0x11b8 = 007f
+0x11b8 = 007f
+0x11f8 = 0009
+0x11fc = 0003
+
+0x1229 = 657c
+0x1231 = 64fc
+0x1259 = 6143
+0x1285 = 5aff
+
+0x1456 = 102f
+0x1468 = f808
+0x1491 = 6a0f
+0x15f1 = 0200
+0x15f6 = 7f65
+
+0x165b = 0000
+0x166b = 0000
+0x166c = 06f2
+0x16fe = 0008
+0x1723 = ffe0
+0x1766 = 0273
+
+# Free
+0x103b = 0068 # too large by 0x3
+0x1043 = 007a # too large by 0x4
+0x10ca = 3471 # too large by 0x10
+0x10e2 = 377d # too large by 0x9
+0x11b8 = 007b # too small by 0x4
+0x11b8 = 007b # too small by 0x4
+0x11f8 = 0006 # too small by 0x3
+0x11fc = 0000 # too small by 0x3.
+
+0x1229 = 6539 # too small by 0x43
+0x1231 = 64b7 # too small by 0x45
+0x1259 = 60f4 # too small by 0x4f
+0x1285 = 5aa7 # too small by 0x58
+
+0x1456 = 107d # too large by 0x4e
+0x1468 = f7fc # too small by 0xc
+0x1491 = 68f2 # too small by 0x11d
+0x15f1 = 01b2 # too small by 0x4e
+0x15f6 = 7e95 # too small by 0xd0
+
+0x165b = 0000
+0x166b = 0000
+0x166c = 0000
+0x16fe = 0000
+0x1723 = 0000
+0x1766 = 0000
+
+
+
+coefs=(
+    456
+    5f6
+    766
+    66c
+    231
+    285
+    1b8
+    65b
+    723
+    66b
+    491
+    468
+    1fc
+    1b8
+    5f1
+    0e2
+    03b
+    229
+    1f8
+    0ca
+    043
+    259
+    6fe
+)
+
+# file=~/Library/Application\ Support/Dolphin/GC/dsp_coef.bin.bak
+file=../Data/Sys/GC/dsp_coef.bin
+for x in ${coefs[@]}; do
+    printf "0x1%s " "$x"
+    xxd -l 2 -s $((0x$x * 2)) $file
+done
