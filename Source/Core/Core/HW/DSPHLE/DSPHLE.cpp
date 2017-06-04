@@ -36,6 +36,11 @@ bool DSPHLE::Initialize(bool wii, bool dsp_thread)
   return true;
 }
 
+bool DSPHLE::WaitingForMail()
+{
+  return false;
+}
+
 void DSPHLE::DSP_StopSoundStream()
 {
 }
