@@ -100,7 +100,7 @@ void HacksWidget::CreateWidgets()
 void HacksWidget::ConnectWidgets()
 {
   connect(m_disable_xfb, &QCheckBox::toggled, this, &HacksWidget::OnXFBToggled);
-  connect(m_accuracy, &QSlider::valueChanged, [this](int) { SaveSettings(); });
+  connect(m_accuracy, &QSlider::valueChanged, this, &HacksWidget::SaveSettings);
 }
 
 void HacksWidget::OnXFBToggled()

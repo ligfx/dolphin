@@ -118,11 +118,11 @@ void GeneralWidget::ConnectWidgets()
 {
   // Video Backend
   connect(m_backend_combo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
-          [this](int) { SaveSettings(); });
+          this, &GeneralWidget::SaveSettings);
   // Fullscreen Resolution
   connect(m_resolution_combo,
-          static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
-          [this](int) { SaveSettings(); });
+          static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this,
+          &GeneralWidget::SaveSettings);
   // Enable Fullscreen
   for (QCheckBox* checkbox : {m_enable_fullscreen, m_hide_cursor, m_render_main_window})
     connect(checkbox, &QCheckBox::toggled, this, &GeneralWidget::SaveSettings);
