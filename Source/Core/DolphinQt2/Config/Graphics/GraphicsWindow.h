@@ -29,14 +29,13 @@ class GraphicsWindow final : public QDialog
 public:
   explicit GraphicsWindow(X11Utils::XRRConfiguration* xrr_config, MainWindow* parent);
 
-  void RegisterWidget(GraphicsWidget* widget);
   bool eventFilter(QObject* object, QEvent* event) override;
+  void SetDescription(QWidget* widget, const char* description);
 
 private:
   void CreateMainLayout();
   void ConnectWidgets();
   void OnBackendChanged(const std::string& backend);
-  void OnDescriptionAdded(QWidget* widget, const char* description);
 
   QTabWidget* m_tab_widget;
   QLabel* m_description;

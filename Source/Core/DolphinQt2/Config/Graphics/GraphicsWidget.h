@@ -17,9 +17,6 @@ class GraphicsWidget : public QWidget
 public:
   explicit GraphicsWidget(GraphicsWindow* parent);
 
-signals:
-  void DescriptionAdded(QWidget* widget, const char* description);
-
 protected:
   void AddDescription(QWidget* widget, const char* description);
 

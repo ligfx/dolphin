@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <functional>
+
 #include "DolphinQt2/Config/Graphics/GraphicsWidget.h"
 
 class GraphicsWindow;
@@ -14,6 +16,7 @@ class AdvancedWidget final : public GraphicsWidget
   Q_OBJECT
 public:
   explicit AdvancedWidget(GraphicsWindow* parent);
+  void ForEachDescription(std::function<void(QWidget*, const char*)> f);
 
 private:
   void LoadSettings() override;
@@ -21,7 +24,6 @@ private:
 
   void CreateWidgets();
   void ConnectWidgets();
-  void AddDescriptions();
   void OnBackendChanged();
   void OnEmulationStateChanged(bool running);
 

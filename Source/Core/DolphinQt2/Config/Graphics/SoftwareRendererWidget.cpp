@@ -29,7 +29,6 @@ SoftwareRendererWidget::SoftwareRendererWidget(GraphicsWindow* parent) : Graphic
 
   LoadSettings();
   ConnectWidgets();
-  AddDescriptions();
 }
 
 void SoftwareRendererWidget::CreateWidgets()
@@ -141,7 +140,7 @@ void SoftwareRendererWidget::SaveSettings()
   Config::SetBaseOrCurrent(Config::GFX_SW_DRAW_END, m_object_range_max->value());
 }
 
-void SoftwareRendererWidget::AddDescriptions()
+void SoftwareRendererWidget::ForEachDescription(std::function<void(QWidget*, const char*)> f)
 {
   static const char* TR_BACKEND_DESCRIPTION =
       QT_TR_NOOP("Selects what graphics API to use internally.\nThe software renderer is extremely "
@@ -157,7 +156,7 @@ void SoftwareRendererWidget::AddDescriptions()
       QT_TR_NOOP("Dump decoded game textures to User/Dump/Textures/<game_id>/.\n\nIf unsure, leave "
                  "this unchecked.");
 
-  AddDescription(m_backend_combo, TR_BACKEND_DESCRIPTION);
-  AddDescription(m_enable_statistics, TR_SHOW_STATISTICS_DESCRIPTION);
-  AddDescription(m_dump_textures, TR_DUMP_TEXTURES_DESCRIPTION);
+  f(m_backend_combo, TR_BACKEND_DESCRIPTION);
+  f(m_enable_statistics, TR_SHOW_STATISTICS_DESCRIPTION);
+  f(m_dump_textures, TR_DUMP_TEXTURES_DESCRIPTION);
 }
