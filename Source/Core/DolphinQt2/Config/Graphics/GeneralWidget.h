@@ -27,6 +27,7 @@ public:
 private:
   void LoadSettings();
   void SaveSettings();
+  void SaveBackendSetting();
 
   void CreateWidgets();
   void ConnectWidgets();

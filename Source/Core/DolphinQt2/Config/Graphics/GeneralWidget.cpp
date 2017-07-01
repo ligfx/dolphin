@@ -158,49 +158,44 @@ void GeneralWidget::LoadSettings()
   m_autoadjust_window_size->setChecked(SConfig::GetInstance().bRenderWindowAutoSize);
 }
 
-void GeneralWidget::SaveSettings()
+void GeneralWidget::SaveBackendSetting()
 {
-  // Video Backend
-  for (const auto& backend : g_available_video_backends)
+  auto new_backend_iter = std::find_if(g_available_video_backends.begin(),
+                                       g_available_video_backends.end(), [=](const auto& backend) {
+                                         return backend->GetDisplayName() ==
+                                                m_backend_combo->currentText().toStdString();
+                                       });
+
+  if (new_backend_iter == g_available_video_backends.end())
+    return;
+  auto& new_backend = *new_backend_iter;
+  if (Settings::Instance().GetVideoBackend() == new_backend->GetName())
+    return;
+
+  if (new_backend->GetName() == "Software Renderer")
   {
-    if (backend->GetDisplayName() == m_backend_combo->currentText().toStdString())
+    QMessageBox confirm_sw;
+    confirm_sw.setIcon(QMessageBox::Warning);
+    confirm_sw.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+    confirm_sw.setText(tr("Software rendering is an order of magnitude slower than using the other "
+                          "backends.\nIt's only useful for debugging purposes.\nDo you really want "
+                          "to enable software rendering? If unsure, select 'No'."));
+
+    if (confirm_sw.exec() != QMessageBox::Yes)
     {
-      const auto current_backend = backend->GetName();
-      if (Settings::Instance().GetVideoBackend() != current_backend)
-      {
-        Settings::Instance().SetVideoBackend(current_backend);
-
-        if (backend->GetName() == "Software Renderer")
-        {
-          QMessageBox confirm_sw;
-
-          confirm_sw.setIcon(QMessageBox::Warning);
-          confirm_sw.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
-          confirm_sw.setText(
-              tr("Software rendering is an order of magnitude slower than using the "
-                 "other backends.\nIt's only useful for debugging purposes.\nDo you "
-                 "really want to enable software rendering? If unsure, select 'No'."));
-
-          if (confirm_sw.exec() != QMessageBox::Yes)
-          {
-            for (const auto& prv_backend : g_available_video_backends)
-            {
-              if (prv_backend->GetName() == Settings::Instance().GetVideoBackend())
-              {
-                m_backend_combo->setCurrentIndex(
-                    m_backend_combo->findText(tr(prv_backend->GetDisplayName().c_str())));
-                break;
-              }
-            }
-            return;
-          }
-        }
-        Settings::Instance().SetVideoBackend(current_backend);
-        backend->InitBackendInfo();
-        break;
-      }
+      OnBackendChanged(Settings::Instance().GetVideoBackend());
+      return;
     }
   }
+
+  Settings::Instance().SetVideoBackend(new_backend->GetName());
+  new_backend->InitBackendInfo();
+}
+
+void GeneralWidget::SaveSettings()
+{
+  // Video backend
+  SaveBackendSetting();
 
   // Fullscreen Resolution
   SConfig::GetInstance().strFullscreenResolution =
