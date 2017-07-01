@@ -4,11 +4,9 @@
 
 #pragma once
 
+#include <QWidget>
 #include <functional>
 
-#include "DolphinQt2/Config/Graphics/GraphicsWidget.h"
-
-class GraphicsWindow;
 class QCheckBox;
 class QComboBox;
 class QGridLayout;
@@ -18,17 +16,17 @@ namespace X11Utils
 class XRRConfiguration;
 }
 
-class GeneralWidget final : public GraphicsWidget
+class GeneralWidget final : public QWidget
 {
   Q_OBJECT
 public:
-  explicit GeneralWidget(X11Utils::XRRConfiguration* xrr_config, GraphicsWindow* parent);
+  explicit GeneralWidget(X11Utils::XRRConfiguration* xrr_config, QWidget* parent = nullptr);
   void OnEmulationStateChanged(bool running);
   void ForEachDescription(std::function<void(QWidget*, const char*)> f);
 
 private:
-  void LoadSettings() override;
-  void SaveSettings() override;
+  void LoadSettings();
+  void SaveSettings();
 
   void CreateWidgets();
   void ConnectWidgets();

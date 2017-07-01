@@ -15,7 +15,7 @@
 #include "DolphinQt2/Config/Graphics/GraphicsSlider.h"
 #include "VideoCommon/VideoConfig.h"
 
-HacksWidget::HacksWidget(GraphicsWindow* parent) : GraphicsWidget(parent)
+HacksWidget::HacksWidget(QWidget* parent) : QWidget(parent)
 {
   CreateWidgets();
   LoadSettings();

@@ -4,24 +4,22 @@
 
 #pragma once
 
+#include <QWidget>
 #include <functional>
 
-#include "DolphinQt2/Config/Graphics/GraphicsWidget.h"
-
-class GraphicsWindow;
 class QCheckBox;
 
-class AdvancedWidget final : public GraphicsWidget
+class AdvancedWidget final : public QWidget
 {
   Q_OBJECT
 public:
-  explicit AdvancedWidget(GraphicsWindow* parent);
+  explicit AdvancedWidget(QWidget* parent = nullptr);
   void OnEmulationStateChanged(bool running);
   void ForEachDescription(std::function<void(QWidget*, const char*)> f);
 
 private:
-  void LoadSettings() override;
-  void SaveSettings() override;
+  void LoadSettings();
+  void SaveSettings();
 
   void CreateWidgets();
   void ConnectWidgets();

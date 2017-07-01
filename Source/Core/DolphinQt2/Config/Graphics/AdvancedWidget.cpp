@@ -13,11 +13,10 @@
 #include "Core/ConfigManager.h"
 #include "DolphinQt2/Config/Graphics/GraphicsBool.h"
 #include "DolphinQt2/Config/Graphics/GraphicsChoice.h"
-#include "DolphinQt2/Config/Graphics/GraphicsWindow.h"
 #include "DolphinQt2/Settings.h"
 #include "VideoCommon/VideoConfig.h"
 
-AdvancedWidget::AdvancedWidget(GraphicsWindow* parent) : GraphicsWidget(parent)
+AdvancedWidget::AdvancedWidget(QWidget* parent) : QWidget(parent)
 {
   CreateWidgets();
   LoadSettings();

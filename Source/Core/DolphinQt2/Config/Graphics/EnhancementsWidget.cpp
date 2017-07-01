@@ -17,14 +17,12 @@
 #include "DolphinQt2/Config/Graphics/GraphicsBool.h"
 #include "DolphinQt2/Config/Graphics/GraphicsChoice.h"
 #include "DolphinQt2/Config/Graphics/GraphicsSlider.h"
-#include "DolphinQt2/Config/Graphics/GraphicsWindow.h"
 #include "DolphinQt2/Settings.h"
 #include "UICommon/VideoUtils.h"
 #include "VideoCommon/PostProcessing.h"
 #include "VideoCommon/VideoConfig.h"
 
-EnhancementsWidget::EnhancementsWidget(GraphicsWindow* parent)
-    : GraphicsWidget(parent), m_block_save(false)
+EnhancementsWidget::EnhancementsWidget(QWidget* parent) : QWidget(parent), m_block_save(false)
 {
   CreateWidgets();
   LoadSettings();
