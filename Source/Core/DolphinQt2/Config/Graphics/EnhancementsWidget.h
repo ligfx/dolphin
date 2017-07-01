@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <functional>
+
 #include "DolphinQt2/Config/Graphics/GraphicsWidget.h"
 
 class GraphicsWindow;
@@ -17,6 +19,7 @@ class EnhancementsWidget final : public GraphicsWidget
   Q_OBJECT
 public:
   explicit EnhancementsWidget(GraphicsWindow* parent);
+  void ForEachDescription(std::function<void(QWidget*, const char*)> f);
 
 private:
   void LoadSettings() override;
@@ -24,7 +27,6 @@ private:
 
   void CreateWidgets();
   void ConnectWidgets();
-  void AddDescriptions();
 
   // Enhancements
   QComboBox* m_ir_combo;

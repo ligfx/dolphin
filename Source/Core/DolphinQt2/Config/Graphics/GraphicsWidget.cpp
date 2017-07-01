@@ -14,10 +14,4 @@
 
 GraphicsWidget::GraphicsWidget(GraphicsWindow* parent)
 {
-  parent->RegisterWidget(this);
-}
-
-void GraphicsWidget::AddDescription(QWidget* widget, const char* description)
-{
-  emit DescriptionAdded(widget, description);
 }

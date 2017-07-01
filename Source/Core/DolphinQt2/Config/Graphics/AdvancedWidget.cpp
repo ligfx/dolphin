@@ -22,7 +22,6 @@ AdvancedWidget::AdvancedWidget(GraphicsWindow* parent) : GraphicsWidget(parent)
   CreateWidgets();
   LoadSettings();
   ConnectWidgets();
-  AddDescriptions();
 
   connect(&Settings::Instance(), &Settings::VideoBackendChanged, this,
           &AdvancedWidget::OnBackendChanged);
@@ -129,7 +128,8 @@ void AdvancedWidget::OnEmulationStateChanged(bool running)
   m_enable_prog_scan->setEnabled(!running);
 }
 
-void AdvancedWidget::AddDescriptions()
+void AdvancedWidget::ForEachDescription(std::function<void(QWidget*, const char*)> f)
+
 {
   static const char* TR_WIREFRAME_DESCRIPTION =
       QT_TR_NOOP("Render the scene as a wireframe.\n\nIf unsure, leave this unchecked.");
@@ -187,22 +187,22 @@ void AdvancedWidget::AddDescriptions()
       "backend.\n\nIf unsure, leave this unchecked.");
 #endif
 
-  AddDescription(m_enable_wireframe, TR_WIREFRAME_DESCRIPTION);
-  AddDescription(m_show_statistics, TR_SHOW_STATS_DESCRIPTION);
-  AddDescription(m_enable_format_overlay, TR_TEXTURE_FORMAT_DECRIPTION);
-  AddDescription(m_enable_api_validation, TR_VALIDATION_LAYER_DESCRIPTION);
-  AddDescription(m_dump_textures, TR_DUMP_TEXTURE_DESCRIPTION);
-  AddDescription(m_load_custom_textures, TR_LOAD_CUSTOM_TEXTURE_DESCRIPTION);
-  AddDescription(m_prefetch_custom_textures, TR_CACHE_CUSTOM_TEXTURE_DESCRIPTION);
-  AddDescription(m_dump_efb_target, TR_DUMP_EFB_DESCRIPTION);
-  AddDescription(m_use_fullres_framedumps, TR_INTERNAL_RESOLUTION_FRAME_DUMPING_DESCRIPTION);
+  f(m_enable_wireframe, TR_WIREFRAME_DESCRIPTION);
+  f(m_show_statistics, TR_SHOW_STATS_DESCRIPTION);
+  f(m_enable_format_overlay, TR_TEXTURE_FORMAT_DECRIPTION);
+  f(m_enable_api_validation, TR_VALIDATION_LAYER_DESCRIPTION);
+  f(m_dump_textures, TR_DUMP_TEXTURE_DESCRIPTION);
+  f(m_load_custom_textures, TR_LOAD_CUSTOM_TEXTURE_DESCRIPTION);
+  f(m_prefetch_custom_textures, TR_CACHE_CUSTOM_TEXTURE_DESCRIPTION);
+  f(m_dump_efb_target, TR_DUMP_EFB_DESCRIPTION);
+  f(m_use_fullres_framedumps, TR_INTERNAL_RESOLUTION_FRAME_DUMPING_DESCRIPTION);
 #ifdef HAVE_FFMPEG
-  AddDescription(m_dump_use_ffv1, TR_USE_FFV1_DESCRIPTION);
+  f(m_dump_use_ffv1, TR_USE_FFV1_DESCRIPTION);
 #endif
-  AddDescription(m_enable_cropping, TR_CROPPING_DESCRIPTION);
-  AddDescription(m_enable_prog_scan, TR_PROGRESSIVE_SCAN_DESCRIPTION);
-  AddDescription(m_enable_freelook, TR_FREE_LOOK_DESCRIPTION);
+  f(m_enable_cropping, TR_CROPPING_DESCRIPTION);
+  f(m_enable_prog_scan, TR_PROGRESSIVE_SCAN_DESCRIPTION);
+  f(m_enable_freelook, TR_FREE_LOOK_DESCRIPTION);
 #ifdef _WIN32
-  AddDescription(m_borderless_fullscreen, TR_BORDERLESS_FULLSCREEN_DESCRIPTION);
+  f(m_borderless_fullscreen, TR_BORDERLESS_FULLSCREEN_DESCRIPTION);
 #endif
 }

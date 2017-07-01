@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <functional>
+
 #include "DolphinQt2/Config/Graphics/GraphicsWidget.h"
 
 class GraphicsWindow;
@@ -22,6 +24,7 @@ class GeneralWidget final : public GraphicsWidget
 public:
   explicit GeneralWidget(X11Utils::XRRConfiguration* xrr_config, GraphicsWindow* parent);
   void OnEmulationStateChanged(bool running);
+  void ForEachDescription(std::function<void(QWidget*, const char*)> f);
 
 private:
   void LoadSettings() override;
@@ -29,7 +32,6 @@ private:
 
   void CreateWidgets();
   void ConnectWidgets();
-  void AddDescriptions();
 
   void OnBackendChanged(const std::string& backend_name);
 

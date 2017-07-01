@@ -29,7 +29,6 @@ EnhancementsWidget::EnhancementsWidget(GraphicsWindow* parent)
   CreateWidgets();
   LoadSettings();
   ConnectWidgets();
-  AddDescriptions();
 
   connect(&Settings::Instance(), &Settings::VideoBackendChanged, this,
           &EnhancementsWidget::LoadSettings);
@@ -217,7 +216,7 @@ void EnhancementsWidget::SaveSettings()
   }
 }
 
-void EnhancementsWidget::AddDescriptions()
+void EnhancementsWidget::ForEachDescription(std::function<void(QWidget*, const char*)> f)
 {
   static const char* TR_INTERNAL_RESOLUTION_DESCRIPTION =
       QT_TR_NOOP("Specifies the resolution used to render at. A high resolution greatly improves "
@@ -285,18 +284,18 @@ void EnhancementsWidget::AddDescriptions()
                  "unfiltered.\nMay improve quality of certain textures in some games, but will "
                  "cause issues in others.\n\nIf unsure, leave this unchecked.");
 
-  AddDescription(m_ir_combo, TR_INTERNAL_RESOLUTION_DESCRIPTION);
-  AddDescription(m_aa_combo, TR_ANTIALIAS_DESCRIPTION);
-  AddDescription(m_af_combo, TR_ANTISTROPIC_FILTERING_DESCRIPTION);
-  AddDescription(m_pp_effect, TR_POSTPROCESSING_DESCRIPTION);
-  AddDescription(m_scaled_efb_copy, TR_SCALED_EFB_COPY_DESCRIPTION);
-  AddDescription(m_per_pixel_lighting, TR_PER_PIXEL_LIGHTING_DESCRIPTION);
-  AddDescription(m_widescreen_hack, TR_WIDESCREEN_HACK_DESCRIPTION);
-  AddDescription(m_disable_fog, TR_REMOVE_FOG_DESCRIPTION);
-  AddDescription(m_force_24bit_color, TR_FORCE_24BIT_DESCRIPTION);
-  AddDescription(m_force_texture_filtering, TR_FORCE_TEXTURE_FILTERING_DESCRIPTION);
-  AddDescription(m_3d_mode, TR_3D_MODE_DESCRIPTION);
-  AddDescription(m_3d_depth, TR_3D_DEPTH_DESCRIPTION);
-  AddDescription(m_3d_convergence, TR_3D_CONVERGENCE_DESCRIPTION);
-  AddDescription(m_3d_swap_eyes, TR_3D_SWAP_EYES_DESCRIPTION);
+  f(m_ir_combo, TR_INTERNAL_RESOLUTION_DESCRIPTION);
+  f(m_aa_combo, TR_ANTIALIAS_DESCRIPTION);
+  f(m_af_combo, TR_ANTISTROPIC_FILTERING_DESCRIPTION);
+  f(m_pp_effect, TR_POSTPROCESSING_DESCRIPTION);
+  f(m_scaled_efb_copy, TR_SCALED_EFB_COPY_DESCRIPTION);
+  f(m_per_pixel_lighting, TR_PER_PIXEL_LIGHTING_DESCRIPTION);
+  f(m_widescreen_hack, TR_WIDESCREEN_HACK_DESCRIPTION);
+  f(m_disable_fog, TR_REMOVE_FOG_DESCRIPTION);
+  f(m_force_24bit_color, TR_FORCE_24BIT_DESCRIPTION);
+  f(m_force_texture_filtering, TR_FORCE_TEXTURE_FILTERING_DESCRIPTION);
+  f(m_3d_mode, TR_3D_MODE_DESCRIPTION);
+  f(m_3d_depth, TR_3D_DEPTH_DESCRIPTION);
+  f(m_3d_convergence, TR_3D_CONVERGENCE_DESCRIPTION);
+  f(m_3d_swap_eyes, TR_3D_SWAP_EYES_DESCRIPTION);
 }

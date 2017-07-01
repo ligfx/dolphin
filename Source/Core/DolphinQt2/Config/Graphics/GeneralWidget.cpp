@@ -29,7 +29,6 @@ GeneralWidget::GeneralWidget(X11Utils::XRRConfiguration* xrr_config, GraphicsWin
   CreateWidgets();
   LoadSettings();
   ConnectWidgets();
-  AddDescriptions();
 
   connect(&Settings::Instance(), &Settings::VideoBackendChanged, this,
           &GeneralWidget::OnBackendChanged);
@@ -233,7 +232,7 @@ void GeneralWidget::OnEmulationStateChanged(bool running)
 #endif
 }
 
-void GeneralWidget::AddDescriptions()
+void GeneralWidget::ForEachDescription(std::function<void(QWidget*, const char*)> f)
 {
 // We need QObject::tr
 #if defined(_WIN32)
@@ -291,23 +290,23 @@ void GeneralWidget::AddDescriptions()
       QT_TR_NOOP("When playing on NetPlay, show chat messages, buffer changes and "
                  "desync alerts.\n\nIf unsure, leave this unchecked.");
 
-  AddDescription(m_backend_combo, TR_BACKEND_DESCRIPTION);
+  f(m_backend_combo, TR_BACKEND_DESCRIPTION);
 #ifdef _WIN32
-  AddDescription(m_adapter_combo, TR_ADAPTER_DESCRIPTION);
+  f(m_adapter_combo, TR_ADAPTER_DESCRIPTION);
 #endif
-  AddDescription(m_resolution_combo, TR_RESOLUTION_DESCRIPTION);
-  AddDescription(m_enable_fullscreen, TR_FULLSCREEN_DESCRIPTION);
-  AddDescription(m_autoadjust_window_size, TR_AUTOSIZE_DESCRIPTION);
-  AddDescription(m_hide_cursor, TR_HIDE_MOUSE_CURSOR_DESCRIPTION);
-  AddDescription(m_render_main_window, TR_RENDER_TO_MAINWINDOW_DESCRIPTION);
-  AddDescription(m_aspect_combo, TR_ASPECT_RATIO_DESCRIPTION);
-  AddDescription(m_enable_vsync, TR_VSYNC_DESCRIPTION);
-  AddDescription(m_show_fps, TR_SHOW_FPS_DESCRIPTION);
-  AddDescription(m_show_ping, TR_SHOW_NETPLAY_PING_DESCRIPTION);
-  AddDescription(m_log_render_time, TR_LOG_RENDERTIME_DESCRIPTION);
-  AddDescription(m_show_messages, TR_SHOW_FPS_DESCRIPTION);
-  AddDescription(m_keep_window_top, TR_KEEP_WINDOW_ON_TOP_DESCRIPTION);
-  AddDescription(m_show_messages, TR_SHOW_NETPLAY_MESSAGES_DESCRIPTION);
+  f(m_resolution_combo, TR_RESOLUTION_DESCRIPTION);
+  f(m_enable_fullscreen, TR_FULLSCREEN_DESCRIPTION);
+  f(m_autoadjust_window_size, TR_AUTOSIZE_DESCRIPTION);
+  f(m_hide_cursor, TR_HIDE_MOUSE_CURSOR_DESCRIPTION);
+  f(m_render_main_window, TR_RENDER_TO_MAINWINDOW_DESCRIPTION);
+  f(m_aspect_combo, TR_ASPECT_RATIO_DESCRIPTION);
+  f(m_enable_vsync, TR_VSYNC_DESCRIPTION);
+  f(m_show_fps, TR_SHOW_FPS_DESCRIPTION);
+  f(m_show_ping, TR_SHOW_NETPLAY_PING_DESCRIPTION);
+  f(m_log_render_time, TR_LOG_RENDERTIME_DESCRIPTION);
+  f(m_show_messages, TR_SHOW_FPS_DESCRIPTION);
+  f(m_keep_window_top, TR_KEEP_WINDOW_ON_TOP_DESCRIPTION);
+  f(m_show_messages, TR_SHOW_NETPLAY_MESSAGES_DESCRIPTION);
 }
 void GeneralWidget::OnBackendChanged(const std::string& backend_name)
 {

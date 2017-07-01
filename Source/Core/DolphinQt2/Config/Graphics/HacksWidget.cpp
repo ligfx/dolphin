@@ -21,7 +21,6 @@ HacksWidget::HacksWidget(GraphicsWindow* parent) : GraphicsWidget(parent)
   LoadSettings();
   ConnectWidgets();
   OnXFBToggled();
-  AddDescriptions();
 }
 
 void HacksWidget::CreateWidgets()
@@ -158,7 +157,7 @@ void HacksWidget::SaveSettings()
   }
 }
 
-void HacksWidget::AddDescriptions()
+void HacksWidget::ForEachDescription(std::function<void(QWidget*, const char*)> f)
 {
   static const char* TR_SKIP_EFB_CPU_ACCESS_DESCRIPTION =
       QT_TR_NOOP("Ignore any requests from the CPU to read from or write to the EFB.\nImproves "
@@ -210,17 +209,17 @@ void HacksWidget::AddDescriptions()
                  "higher internal resolutions. This setting has no effect when native internal "
                  "resolution is used.\n\nIf unsure, leave this unchecked.");
 
-  AddDescription(m_skip_efb_cpu, TR_SKIP_EFB_CPU_ACCESS_DESCRIPTION);
-  AddDescription(m_ignore_format_changes, TR_IGNORE_FORMAT_CHANGE_DESCRIPTION);
-  AddDescription(m_store_efb_copies, TR_STORE_EFB_TO_TEXTURE_DESCRIPTION);
-  AddDescription(m_accuracy, TR_ACCUARCY_DESCRIPTION);
-  AddDescription(m_disable_xfb, TR_DISABLE_XFB_DESCRIPTION);
-  AddDescription(m_virtual_xfb, TR_VIRTUAL_XFB_DESCRIPTION);
-  AddDescription(m_real_xfb, TR_REAL_XFB_DESCRIPTION);
-  AddDescription(m_gpu_texture_decoding, TR_GPU_DECODING_DESCRIPTION);
-  AddDescription(m_fast_depth_calculation, TR_FAST_DEPTH_CALC_DESCRIPTION);
-  AddDescription(m_disable_bounding_box, TR_DISABLE_BOUNDINGBOX_DESCRIPTION);
-  AddDescription(m_fast_depth_calculation, TR_FAST_DEPTH_CALC_DESCRIPTION);
-  AddDescription(m_disable_bounding_box, TR_DISABLE_BOUNDINGBOX_DESCRIPTION);
-  AddDescription(m_vertex_rounding, TR_VERTEX_ROUNDING_DESCRIPTION);
+  f(m_skip_efb_cpu, TR_SKIP_EFB_CPU_ACCESS_DESCRIPTION);
+  f(m_ignore_format_changes, TR_IGNORE_FORMAT_CHANGE_DESCRIPTION);
+  f(m_store_efb_copies, TR_STORE_EFB_TO_TEXTURE_DESCRIPTION);
+  f(m_accuracy, TR_ACCUARCY_DESCRIPTION);
+  f(m_disable_xfb, TR_DISABLE_XFB_DESCRIPTION);
+  f(m_virtual_xfb, TR_VIRTUAL_XFB_DESCRIPTION);
+  f(m_real_xfb, TR_REAL_XFB_DESCRIPTION);
+  f(m_gpu_texture_decoding, TR_GPU_DECODING_DESCRIPTION);
+  f(m_fast_depth_calculation, TR_FAST_DEPTH_CALC_DESCRIPTION);
+  f(m_disable_bounding_box, TR_DISABLE_BOUNDINGBOX_DESCRIPTION);
+  f(m_fast_depth_calculation, TR_FAST_DEPTH_CALC_DESCRIPTION);
+  f(m_disable_bounding_box, TR_DISABLE_BOUNDINGBOX_DESCRIPTION);
+  f(m_vertex_rounding, TR_VERTEX_ROUNDING_DESCRIPTION);
 }

@@ -70,6 +70,15 @@ void GraphicsWindow::CreateMainLayout()
     m_advanced_widget->OnEmulationStateChanged(false);
   });
 
+  auto set_description = [this](QWidget* widget, const char* description) {
+    SetDescription(widget, description);
+  };
+  m_general_widget->ForEachDescription(set_description);
+  m_enhancements_widget->ForEachDescription(set_description);
+  m_hacks_widget->ForEachDescription(set_description);
+  m_advanced_widget->ForEachDescription(set_description);
+  m_software_renderer->ForEachDescription(set_description);
+
   connect(&Settings::Instance(), &Settings::VideoBackendChanged, this,
           &GraphicsWindow::OnBackendChanged);
 
@@ -112,12 +121,7 @@ void GraphicsWindow::OnBackendChanged(const std::string& backend)
   }
 }
 
-void GraphicsWindow::RegisterWidget(GraphicsWidget* widget)
-{
-  connect(widget, &GraphicsWidget::DescriptionAdded, this, &GraphicsWindow::OnDescriptionAdded);
-}
-
-void GraphicsWindow::OnDescriptionAdded(QWidget* widget, const char* description)
+void GraphicsWindow::SetDescription(QWidget* widget, const char* description)
 {
   m_widget_descriptions[widget] = description;
   widget->installEventFilter(this);
