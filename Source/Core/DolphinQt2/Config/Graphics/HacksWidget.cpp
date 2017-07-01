@@ -99,7 +99,7 @@ void HacksWidget::CreateWidgets()
 
 void HacksWidget::ConnectWidgets()
 {
-  connect(m_accuracy, &QSlider::valueChanged, [this](int) { SaveSettings(); });
+  connect(m_accuracy, &QSlider::valueChanged, this, &HacksWidget::SaveSettings);
 }
 
 void HacksWidget::LoadSettings()
