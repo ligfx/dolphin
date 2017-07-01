@@ -18,14 +18,13 @@
 #include "Core/Core.h"
 #include "DolphinQt2/Config/Graphics/GraphicsBool.h"
 #include "DolphinQt2/Config/Graphics/GraphicsChoice.h"
-#include "DolphinQt2/Config/Graphics/GraphicsWindow.h"
 #include "DolphinQt2/Settings.h"
 #include "UICommon/VideoUtils.h"
 #include "VideoCommon/VideoBackendBase.h"
 #include "VideoCommon/VideoConfig.h"
 
-GeneralWidget::GeneralWidget(X11Utils::XRRConfiguration* xrr_config, GraphicsWindow* parent)
-    : GraphicsWidget(parent), m_xrr_config(xrr_config)
+GeneralWidget::GeneralWidget(X11Utils::XRRConfiguration* xrr_config, QWidget* parent)
+    : QWidget(parent), m_xrr_config(xrr_config)
 {
   CreateWidgets();
   LoadSettings();

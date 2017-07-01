@@ -43,7 +43,6 @@ set(SRCS
   Config/Graphics/GraphicsBool.cpp
   Config/Graphics/GraphicsChoice.cpp
   Config/Graphics/GraphicsSlider.cpp
-  Config/Graphics/GraphicsWidget.cpp
   Config/Graphics/GraphicsWindow.cpp
   Config/Graphics/SoftwareRendererWidget.cpp
   Config/InfoWidget.cpp

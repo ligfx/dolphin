@@ -55,11 +55,11 @@ void GraphicsWindow::CreateMainLayout()
   main_layout->addWidget(description_box);
   main_layout->addWidget(m_button_box);
 
-  m_general_widget = new GeneralWidget(m_xrr_config, this);
-  m_enhancements_widget = new EnhancementsWidget(this);
-  m_hacks_widget = new HacksWidget(this);
-  m_advanced_widget = new AdvancedWidget(this);
-  m_software_renderer = new SoftwareRendererWidget(this);
+  m_general_widget = new GeneralWidget(m_xrr_config);
+  m_enhancements_widget = new EnhancementsWidget();
+  m_hacks_widget = new HacksWidget();
+  m_advanced_widget = new AdvancedWidget();
+  m_software_renderer = new SoftwareRendererWidget();
 
   auto set_description = [this](QWidget* widget, const char* description) {
     SetDescription(widget, description);

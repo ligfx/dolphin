@@ -76,7 +76,6 @@
     <QtMoc Include="Config\Graphics\GraphicsBool.h" />
     <QtMoc Include="Config\Graphics\GraphicsChoice.h" />
     <QtMoc Include="Config\Graphics\GraphicsSlider.h" />
-    <QtMoc Include="Config\Graphics\GraphicsWidget.h" />
     <QtMoc Include="Config\Graphics\GraphicsWindow.h" />
     <QtMoc Include="Config\Graphics\HacksWidget.h" />
     <QtMoc Include="Config\Graphics\SoftwareRendererWidget.h" />
@@ -132,7 +131,6 @@
     <ClCompile Include="$(QtMocOutPrefix)GraphicsBool.cpp" />
     <ClCompile Include="$(QtMocOutPrefix)GraphicsChoice.cpp" />
     <ClCompile Include="$(QtMocOutPrefix)GraphicsSlider.cpp" />
-    <ClCompile Include="$(QtMocOutPrefix)GraphicsWidget.cpp" />
     <ClCompile Include="$(QtMocOutPrefix)GraphicsWindow.cpp" />
     <ClCompile Include="$(QtMocOutPrefix)HacksWidget.cpp" />
     <ClCompile Include="$(QtMocOutPrefix)Host.cpp" />
@@ -173,7 +171,6 @@
     <ClCompile Include="Config\Graphics\GraphicsBool.cpp" />
     <ClCompile Include="Config\Graphics\GraphicsChoice.cpp" />
     <ClCompile Include="Config\Graphics\GraphicsSlider.cpp" />
-    <ClCompile Include="Config\Graphics\GraphicsWidget.cpp" />
     <ClCompile Include="Config\Graphics\GraphicsWindow.cpp" />
     <ClCompile Include="Config\Graphics\SoftwareRendererWidget.cpp" />
     <ClCompile Include="Config\InfoWidget.cpp" />

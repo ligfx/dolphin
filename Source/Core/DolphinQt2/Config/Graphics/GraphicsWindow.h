@@ -11,7 +11,6 @@ class AdvancedWidget;
 class EnhancementsWidget;
 class HacksWidget;
 class GeneralWidget;
-class GraphicsWidget;
 class MainWindow;
 class QLabel;
 class QTabWidget;
