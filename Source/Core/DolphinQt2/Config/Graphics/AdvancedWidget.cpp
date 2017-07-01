@@ -14,6 +14,7 @@
 #include "DolphinQt2/Config/Graphics/GraphicsBool.h"
 #include "DolphinQt2/Config/Graphics/GraphicsChoice.h"
 #include "DolphinQt2/Config/Graphics/GraphicsWindow.h"
+#include "DolphinQt2/Settings.h"
 #include "VideoCommon/VideoConfig.h"
 
 AdvancedWidget::AdvancedWidget(GraphicsWindow* parent) : GraphicsWidget(parent)
@@ -23,7 +24,9 @@ AdvancedWidget::AdvancedWidget(GraphicsWindow* parent) : GraphicsWidget(parent)
   ConnectWidgets();
   AddDescriptions();
 
-  connect(parent, &GraphicsWindow::BackendChanged, this, &AdvancedWidget::OnBackendChanged);
+  connect(&Settings::Instance(), &Settings::VideoBackendChanged, this,
+          &AdvancedWidget::OnBackendChanged);
+
   connect(parent, &GraphicsWindow::EmulationStarted, [this] { OnEmulationStateChanged(true); });
   connect(parent, &GraphicsWindow::EmulationStopped, [this] { OnEmulationStateChanged(false); });
 

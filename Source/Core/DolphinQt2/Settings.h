@@ -74,6 +74,8 @@ public:
   QSize GetRenderWindowSize() const;
   void SetHideCursor(bool hide_cursor);
   bool GetHideCursor() const;
+  void SetVideoBackend(std::string video_backend);
+  const std::string& GetVideoBackend() const;
 
   // Audio
   int GetVolume() const;
@@ -122,6 +124,7 @@ signals:
   void PathAdded(const QString&);
   void PathRemoved(const QString&);
   void HideCursorChanged();
+  void VideoBackendChanged(const std::string& video_backend);
   void VolumeChanged(int volume);
 
 private:

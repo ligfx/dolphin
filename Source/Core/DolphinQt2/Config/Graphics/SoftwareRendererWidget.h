@@ -17,9 +17,6 @@ class SoftwareRendererWidget final : public GraphicsWidget
 public:
   explicit SoftwareRendererWidget(GraphicsWindow* parent);
 
-signals:
-  void BackendChanged(const QString& backend);
-
 private:
   void LoadSettings() override;
   void SaveSettings() override;
