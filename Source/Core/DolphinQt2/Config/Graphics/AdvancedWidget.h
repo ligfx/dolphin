@@ -14,6 +14,7 @@ class AdvancedWidget final : public GraphicsWidget
   Q_OBJECT
 public:
   explicit AdvancedWidget(GraphicsWindow* parent);
+  void OnEmulationStateChanged(bool running);
 
 private:
   void LoadSettings() override;
@@ -23,7 +24,6 @@ private:
   void ConnectWidgets();
   void AddDescriptions();
   void OnBackendChanged();
-  void OnEmulationStateChanged(bool running);
 
   // Debugging
   QCheckBox* m_enable_wireframe;

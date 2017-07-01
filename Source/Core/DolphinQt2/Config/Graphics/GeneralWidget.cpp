@@ -33,8 +33,6 @@ GeneralWidget::GeneralWidget(X11Utils::XRRConfiguration* xrr_config, GraphicsWin
 
   connect(&Settings::Instance(), &Settings::VideoBackendChanged, this,
           &GeneralWidget::OnBackendChanged);
-  connect(parent, &GraphicsWindow::EmulationStarted, [this] { OnEmulationStateChanged(true); });
-  connect(parent, &GraphicsWindow::EmulationStopped, [this] { OnEmulationStateChanged(false); });
 }
 
 void GeneralWidget::CreateWidgets()

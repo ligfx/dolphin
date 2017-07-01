@@ -27,7 +27,7 @@ class GraphicsWindow final : public QDialog
 {
   Q_OBJECT
 public:
-  explicit GraphicsWindow(X11Utils::XRRConfiguration* xrr_config, MainWindow* parent);
+  explicit GraphicsWindow(X11Utils::XRRConfiguration* xrr_config, QWidget* parent = nullptr);
 
   void RegisterWidget(GraphicsWidget* widget);
   bool eventFilter(QObject* object, QEvent* event) override;

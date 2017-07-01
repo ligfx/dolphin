@@ -20,7 +20,7 @@
 #include "DolphinQt2/MainWindow.h"
 #include "DolphinQt2/Settings.h"
 
-GraphicsWindow::GraphicsWindow(X11Utils::XRRConfiguration* xrr_config, MainWindow* parent)
+GraphicsWindow::GraphicsWindow(X11Utils::XRRConfiguration* xrr_config, QWidget* parent)
     : QDialog(parent), m_xrr_config(xrr_config)
 {
   CreateMainLayout();
@@ -30,9 +30,6 @@ GraphicsWindow::GraphicsWindow(X11Utils::XRRConfiguration* xrr_config, MainWindo
   setWindowFlags(Qt::Window);
 
   OnBackendChanged(Settings::Instance().GetVideoBackend());
-
-  connect(parent, &MainWindow::EmulationStarted, this, &GraphicsWindow::EmulationStarted);
-  connect(parent, &MainWindow::EmulationStopped, this, &GraphicsWindow::EmulationStopped);
 }
 
 void GraphicsWindow::CreateMainLayout()
@@ -63,6 +60,15 @@ void GraphicsWindow::CreateMainLayout()
   m_hacks_widget = new HacksWidget(this);
   m_advanced_widget = new AdvancedWidget(this);
   m_software_renderer = new SoftwareRendererWidget(this);
+
+  connect(this, &GraphicsWindow::EmulationStarted, [this] {
+    m_general_widget->OnEmulationStateChanged(true);
+    m_advanced_widget->OnEmulationStateChanged(true);
+  });
+  connect(this, &GraphicsWindow::EmulationStopped, [this] {
+    m_general_widget->OnEmulationStateChanged(false);
+    m_advanced_widget->OnEmulationStateChanged(false);
+  });
 
   connect(&Settings::Instance(), &Settings::VideoBackendChanged, this,
           &GraphicsWindow::OnBackendChanged);

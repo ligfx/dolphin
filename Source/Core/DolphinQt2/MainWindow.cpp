@@ -134,11 +134,6 @@ void MainWindow::CreateComponents()
   m_settings_window = new SettingsWindow(this);
   m_hotkey_window = new MappingWindow(this, 0);
 
-  connect(this, &MainWindow::EmulationStarted, m_settings_window,
-          &SettingsWindow::EmulationStarted);
-  connect(this, &MainWindow::EmulationStopped, m_settings_window,
-          &SettingsWindow::EmulationStopped);
-
 #if defined(HAVE_XRANDR) && HAVE_XRANDR
   m_graphics_window = new GraphicsWindow(
       new X11Utils::XRRConfiguration(
@@ -149,6 +144,15 @@ void MainWindow::CreateComponents()
 #else
   m_graphics_window = new GraphicsWindow(nullptr, this);
 #endif
+
+  connect(this, &MainWindow::EmulationStarted, m_settings_window, [this] {
+    m_settings_window->EmulationStarted();
+    m_graphics_window->EmulationStarted();
+  });
+  connect(this, &MainWindow::EmulationStopped, m_settings_window, [this] {
+    m_settings_window->EmulationStopped();
+    m_graphics_window->EmulationStopped();
+  });
 
   InstallHotkeyFilter(m_hotkey_window);
   InstallHotkeyFilter(m_controllers_window);

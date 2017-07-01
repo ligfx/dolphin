@@ -27,9 +27,6 @@ AdvancedWidget::AdvancedWidget(GraphicsWindow* parent) : GraphicsWidget(parent)
   connect(&Settings::Instance(), &Settings::VideoBackendChanged, this,
           &AdvancedWidget::OnBackendChanged);
 
-  connect(parent, &GraphicsWindow::EmulationStarted, [this] { OnEmulationStateChanged(true); });
-  connect(parent, &GraphicsWindow::EmulationStopped, [this] { OnEmulationStateChanged(false); });
-
   OnBackendChanged();
 }
 
