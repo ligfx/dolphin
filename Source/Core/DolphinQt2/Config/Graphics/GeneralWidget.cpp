@@ -110,6 +110,7 @@ void GeneralWidget::CreateWidgets()
 
   main_layout->addWidget(m_video_box);
   main_layout->addWidget(m_options_box);
+  main_layout->addStretch();
 
   setLayout(main_layout);
 }
