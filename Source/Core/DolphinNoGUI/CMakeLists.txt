@@ -1,7 +1,3 @@
-if(NOT(USE_X11 OR ENABLE_HEADLESS))
-  return()
-endif()
-
 set(NOGUI_SRCS MainNoGUI.cpp)
 
 add_executable(dolphin-nogui ${NOGUI_SRCS})
