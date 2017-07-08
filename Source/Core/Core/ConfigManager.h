@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <array>
 #include <limits>
 #include <optional>
 #include <set>
@@ -226,7 +227,7 @@ struct SConfig
   std::string m_strMemoryCardB;
   std::string m_strGbaCartA;
   std::string m_strGbaCartB;
-  ExpansionInterface::TEXIDevices m_EXIDevice[3];
+  std::array<ExpansionInterface::TEXIDevices, 3> m_EXIDevice;
   SerialInterface::SIDevices m_SIDevice[4];
   std::string m_bba_mac;
 
