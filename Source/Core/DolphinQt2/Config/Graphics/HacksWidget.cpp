@@ -9,10 +9,12 @@
 #include <QLabel>
 #include <QVBoxLayout>
 
+#include "Common/Config/Config.h"
 #include "Core/Config/GraphicsSettings.h"
 #include "Core/ConfigManager.h"
 #include "DolphinQt2/Config/Graphics/GraphicsBool.h"
 #include "DolphinQt2/Config/Graphics/GraphicsSlider.h"
+#include "DolphinQt2/QtUtils/Bind.h"
 #include "VideoCommon/VideoConfig.h"
 
 HacksWidget::HacksWidget(QWidget* parent) : QWidget(parent)
@@ -80,8 +82,30 @@ void HacksWidget::CreateWidgets()
 
   m_fast_depth_calculation =
       new GraphicsBool(tr("Fast Depth Calculation"), Config::GFX_FAST_DEPTH_CALC);
-  m_disable_bounding_box =
-      new GraphicsBool(tr("Disable Bounding Box"), Config::GFX_HACK_BBOX_ENABLE, true);
+  m_disable_bounding_box = new QCheckBox(tr("Disable Bounding Box"));
+  BindControlToProperty(m_disable_bounding_box, Config::GFX_HACK_BBOX_ENABLE,
+                        std::logical_not<bool>(), std::logical_not<bool>());
+  // BindControlBoldToProperty(m_disable_bounding_box)
+
+  // auto subscription = Config::OnConfigChanged().Subscribe([=] {
+  //   auto bf = m_disable_bounding_box->font();
+  //   bf.setBold(Config::GetActiveLayerForConfig(Config::GFX_HACK_BBOX_ENABLE) !=
+  //              Config::LayerType::Base);
+  //   m_disable_bounding_box->setFont(bf);
+  // });
+  // connect(this, &QObject::destroyed,
+  //         [subscription] { Config::OnConfigChanged().Unsubscribe(subscription); });
+  // Config::AddConfigChangedCallback([=] {
+  //   auto bf = m_disable_bounding_box->font();
+  //   bf.setBold(Config::GetActiveLayerForConfig(Config::GFX_HACK_BBOX_ENABLE) !=
+  //   Config::LayerType::Base);
+  //   m_disable_bounding_box->setFont(bf);
+  // });
+
+  // Config::GetActiveLayerForConfig(m_setting) != Config::LayerType::Base
+
+  // BindControlBoldToProperty(m_disable_bounding_box,)
+  // new GraphicsBool(tr("Disable Bounding Box"), Config::GFX_HACK_BBOX_ENABLE, true);
   m_vertex_rounding = new GraphicsBool(tr("Vertex Rounding"), Config::GFX_HACK_VERTEX_ROUDING);
 
   other_layout->addWidget(m_fast_depth_calculation, 0, 0);
