@@ -274,22 +274,22 @@ static u16 _gdsp_ifx_read(u16 addr)
   }
 }
 
-static void PrintRegs()
-{
-  printf("== Registers ==\n");
-  printf("AR0:   %04x     AR1:   %04x     AR2:   %04x     AR3:   %04x\n", g_dsp.r.ar[0],
-         g_dsp.r.ar[1], g_dsp.r.ar[2], g_dsp.r.ar[3]);
-  printf("IX0:   %04x     IX1:   %04x     IX2:   %04x     IX3:   %04x\n", g_dsp.r.ix[0],
-         g_dsp.r.ix[1], g_dsp.r.ix[2], g_dsp.r.ix[3]);
-  printf("AX0.H: %04x     AX0.L: %04x     AX1.H: %04x     AX1.L: %04x\n", g_dsp.r.ax[0].h,
-         g_dsp.r.ax[0].l, g_dsp.r.ax[1].h, g_dsp.r.ax[1].l);
-  printf("AC0.H: %04x     AC0.M: %04x     AC0.L: %04x\n", g_dsp.r.ac[0].h, g_dsp.r.ac[0].m,
-         g_dsp.r.ac[0].l);
-  printf("AC1.H: %04x     AC1.M: %04x     AC1.L: %04x\n", g_dsp.r.ac[1].h, g_dsp.r.ac[1].m,
-         g_dsp.r.ac[1].l);
-  printf("PROD: %016llx\n", g_dsp.r.prod.val);
-  printf("SR: %04x\n", g_dsp.r.sr);
-}
+// static void PrintRegs()
+// {
+//   printf("== Registers ==\n");
+//   printf("AR0:   %04x     AR1:   %04x     AR2:   %04x     AR3:   %04x\n", g_dsp.r.ar[0],
+//          g_dsp.r.ar[1], g_dsp.r.ar[2], g_dsp.r.ar[3]);
+//   printf("IX0:   %04x     IX1:   %04x     IX2:   %04x     IX3:   %04x\n", g_dsp.r.ix[0],
+//          g_dsp.r.ix[1], g_dsp.r.ix[2], g_dsp.r.ix[3]);
+//   printf("AX0.H: %04x     AX0.L: %04x     AX1.H: %04x     AX1.L: %04x\n", g_dsp.r.ax[0].h,
+//          g_dsp.r.ax[0].l, g_dsp.r.ax[1].h, g_dsp.r.ax[1].l);
+//   printf("AC0.H: %04x     AC0.M: %04x     AC0.L: %04x\n", g_dsp.r.ac[0].h, g_dsp.r.ac[0].m,
+//          g_dsp.r.ac[0].l);
+//   printf("AC1.H: %04x     AC1.M: %04x     AC1.L: %04x\n", g_dsp.r.ac[1].h, g_dsp.r.ac[1].m,
+//          g_dsp.r.ac[1].l);
+//   printf("PROD: %016llx\n", g_dsp.r.prod.val);
+//   printf("SR: %04x\n", g_dsp.r.sr);
+// }
 
 u16 gdsp_ifx_read(u16 addr)
 {
