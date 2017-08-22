@@ -85,6 +85,7 @@ set(SRCS
   QtUtils/DoubleClickEventFilter.cpp
   QtUtils/ElidedButton.cpp
   QtUtils/ListTabWidget.cpp
+  QtUtils/VerticalScrollArea.cpp
   QtUtils/WindowActivationEventFilter.cpp
   Settings/AdvancedPane.cpp
   Settings/AudioPane.cpp
