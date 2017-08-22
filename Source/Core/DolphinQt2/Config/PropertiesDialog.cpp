@@ -11,6 +11,7 @@
 #include "DolphinQt2/Config/FilesystemWidget.h"
 #include "DolphinQt2/Config/GeckoCodeWidget.h"
 #include "DolphinQt2/Config/InfoWidget.h"
+#include "DolphinQt2/QtUtils/VerticalScrollArea.h"
 
 PropertiesDialog::PropertiesDialog(QWidget* parent, const GameFile& game) : QDialog(parent)
 {
@@ -41,5 +42,5 @@ PropertiesDialog::PropertiesDialog(QWidget* parent, const GameFile& game) : QDia
   connect(ok_box, &QDialogButtonBox::accepted, this, &PropertiesDialog::accept);
   layout->addWidget(ok_box);
 
-  setLayout(layout);
+  setLayout(WrapInVerticalScrollArea(layout));
 }
