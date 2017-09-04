@@ -103,6 +103,19 @@ bool Settings::GetHideCursor() const
   return SConfig::GetInstance().bHideCursor;
 }
 
+const std::string& Settings::GetVideoBackend() const
+{
+  return SConfig::GetInstance().m_strVideoBackend;
+}
+
+void Settings::SetVideoBackend(std::string video_backend)
+{
+  if (video_backend == GetVideoBackend())
+    return;
+  SConfig::GetInstance().m_strVideoBackend = std::move(video_backend);
+  emit VideoBackendChanged(GetVideoBackend());
+}
+
 int Settings::GetVolume() const
 {
   return SConfig::GetInstance().m_Volume;

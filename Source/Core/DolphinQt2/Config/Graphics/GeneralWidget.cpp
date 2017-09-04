@@ -31,9 +31,9 @@ GeneralWidget::GeneralWidget(X11Utils::XRRConfiguration* xrr_config, GraphicsWin
   LoadSettings();
   ConnectWidgets();
   AddDescriptions();
-  emit BackendChanged(QString::fromStdString(SConfig::GetInstance().m_strVideoBackend));
 
-  connect(parent, &GraphicsWindow::BackendChanged, this, &GeneralWidget::OnBackendChanged);
+  connect(&Settings::Instance(), &Settings::VideoBackendChanged, this,
+          &GeneralWidget::OnBackendChanged);
   connect(&Settings::Instance(), &Settings::EmulationStateChanged, this,
           [=](Core::State state) { OnEmulationStateChanged(state != Core::State::Uninitialized); });
 }
@@ -124,7 +124,7 @@ void GeneralWidget::LoadSettings()
   // Video Backend
   for (const auto& backend : g_available_video_backends)
   {
-    if (backend->GetName() == SConfig::GetInstance().m_strVideoBackend)
+    if (backend->GetName() == Settings::Instance().GetVideoBackend())
     {
       backend->InitBackendInfo();
       m_backend_combo->setCurrentIndex(
@@ -153,9 +153,9 @@ void GeneralWidget::SaveSettings()
     if (backend->GetDisplayName() == m_backend_combo->currentText().toStdString())
     {
       const auto current_backend = backend->GetName();
-      if (SConfig::GetInstance().m_strVideoBackend != current_backend)
+      if (Settings::Instance().GetVideoBackend() != current_backend)
       {
-        SConfig::GetInstance().m_strVideoBackend = current_backend;
+        Settings::Instance().SetVideoBackend(current_backend);
 
         if (backend->GetName() == "Software Renderer")
         {
@@ -172,7 +172,7 @@ void GeneralWidget::SaveSettings()
           {
             for (const auto& prv_backend : g_available_video_backends)
             {
-              if (prv_backend->GetName() == SConfig::GetInstance().m_strVideoBackend)
+              if (prv_backend->GetName() == Settings::Instance().GetVideoBackend())
               {
                 m_backend_combo->setCurrentIndex(
                     m_backend_combo->findText(tr(prv_backend->GetDisplayName().c_str())));
@@ -182,9 +182,8 @@ void GeneralWidget::SaveSettings()
             return;
           }
         }
-        SConfig::GetInstance().m_strVideoBackend = current_backend;
+        Settings::Instance().SetVideoBackend(current_backend);
         backend->InitBackendInfo();
-        emit BackendChanged(QString::fromStdString(current_backend));
         break;
       }
     }
@@ -283,11 +282,11 @@ void GeneralWidget::AddDescriptions()
   AddDescription(m_keep_window_top, TR_KEEP_WINDOW_ON_TOP_DESCRIPTION);
   AddDescription(m_show_messages, TR_SHOW_NETPLAY_MESSAGES_DESCRIPTION);
 }
-void GeneralWidget::OnBackendChanged(const QString& backend_name)
+void GeneralWidget::OnBackendChanged(const std::string& backend_name)
 {
   for (const auto& backend : g_available_video_backends)
   {
-    if (QString::fromStdString(backend->GetName()) == backend_name)
+    if (backend->GetName() == backend_name)
     {
       m_backend_combo->setCurrentIndex(
           m_backend_combo->findText(tr(backend->GetDisplayName().c_str())));

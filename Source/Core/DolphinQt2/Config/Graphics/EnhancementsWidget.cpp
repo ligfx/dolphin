@@ -30,8 +30,9 @@ EnhancementsWidget::EnhancementsWidget(GraphicsWindow* parent)
   LoadSettings();
   ConnectWidgets();
   AddDescriptions();
-  connect(parent, &GraphicsWindow::BackendChanged,
-          [this](const QString& backend) { LoadSettings(); });
+
+  connect(&Settings::Instance(), &Settings::VideoBackendChanged, this,
+          &EnhancementsWidget::LoadSettings);
 }
 
 void EnhancementsWidget::CreateWidgets()

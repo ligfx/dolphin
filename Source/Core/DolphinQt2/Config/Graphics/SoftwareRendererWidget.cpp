@@ -24,7 +24,8 @@ SoftwareRendererWidget::SoftwareRendererWidget(GraphicsWindow* parent) : Graphic
 {
   CreateWidgets();
 
-  connect(parent, &GraphicsWindow::BackendChanged, [this] { LoadSettings(); });
+  connect(&Settings::Instance(), &Settings::VideoBackendChanged, this,
+          &SoftwareRendererWidget::LoadSettings);
 
   LoadSettings();
   ConnectWidgets();
@@ -116,7 +117,7 @@ void SoftwareRendererWidget::LoadSettings()
 {
   for (const auto& backend : g_available_video_backends)
   {
-    if (backend->GetName() == SConfig::GetInstance().m_strVideoBackend)
+    if (backend->GetName() == Settings::Instance().GetVideoBackend())
       m_backend_combo->setCurrentIndex(
           m_backend_combo->findText(tr(backend->GetDisplayName().c_str())));
   }
@@ -131,12 +132,7 @@ void SoftwareRendererWidget::SaveSettings()
   {
     if (tr(backend->GetDisplayName().c_str()) == m_backend_combo->currentText())
     {
-      const auto backend_name = backend->GetName();
-      if (backend_name != SConfig::GetInstance().m_strVideoBackend)
-      {
-        SConfig::GetInstance().m_strVideoBackend = backend_name;
-        emit BackendChanged(QString::fromStdString(backend_name));
-      }
+      Settings::Instance().SetVideoBackend(backend->GetName());
       break;
     }
   }

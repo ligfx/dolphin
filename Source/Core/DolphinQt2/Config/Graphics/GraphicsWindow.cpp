@@ -18,6 +18,7 @@
 #include "DolphinQt2/Config/Graphics/HacksWidget.h"
 #include "DolphinQt2/Config/Graphics/SoftwareRendererWidget.h"
 #include "DolphinQt2/MainWindow.h"
+#include "DolphinQt2/Settings.h"
 
 GraphicsWindow::GraphicsWindow(X11Utils::XRRConfiguration* xrr_config, MainWindow* parent)
     : QDialog(parent), m_xrr_config(xrr_config)
@@ -28,7 +29,7 @@ GraphicsWindow::GraphicsWindow(X11Utils::XRRConfiguration* xrr_config, MainWindo
   setWindowTitle(tr("Graphics"));
   setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
 
-  OnBackendChanged(QString::fromStdString(SConfig::GetInstance().m_strVideoBackend));
+  OnBackendChanged(Settings::Instance().GetVideoBackend());
 }
 
 void GraphicsWindow::CreateMainLayout()
@@ -60,12 +61,10 @@ void GraphicsWindow::CreateMainLayout()
   m_advanced_widget = new AdvancedWidget(this);
   m_software_renderer = new SoftwareRendererWidget(this);
 
-  connect(m_general_widget, &GeneralWidget::BackendChanged, this,
-          &GraphicsWindow::OnBackendChanged);
-  connect(m_software_renderer, &SoftwareRendererWidget::BackendChanged, this,
+  connect(&Settings::Instance(), &Settings::VideoBackendChanged, this,
           &GraphicsWindow::OnBackendChanged);
 
-  if (SConfig::GetInstance().m_strVideoBackend != "Software Renderer")
+  if (Settings::Instance().GetVideoBackend() != "Software Renderer")
   {
     m_tab_widget->addTab(m_general_widget, tr("General"));
     m_tab_widget->addTab(m_enhancements_widget, tr("Enhancements"));
@@ -85,16 +84,16 @@ void GraphicsWindow::ConnectWidgets()
   connect(m_button_box, &QDialogButtonBox::accepted, this, &QDialog::accept);
 }
 
-void GraphicsWindow::OnBackendChanged(const QString& backend)
+void GraphicsWindow::OnBackendChanged(const std::string& backend)
 {
-  setWindowTitle(tr("Dolphin %1 Graphics Configuration").arg(backend));
-  if (backend == QStringLiteral("Software Renderer") && m_tab_widget->count() > 1)
+  setWindowTitle(tr("Dolphin %1 Graphics Configuration").arg(QString::fromStdString(backend)));
+  if (backend == "Software Renderer" && m_tab_widget->count() > 1)
   {
     m_tab_widget->clear();
     m_tab_widget->addTab(m_software_renderer, tr("Software Renderer"));
   }
 
-  if (backend != QStringLiteral("Software Renderer") && m_tab_widget->count() == 1)
+  if (backend != "Software Renderer" && m_tab_widget->count() == 1)
   {
     m_tab_widget->clear();
     m_tab_widget->addTab(m_general_widget, tr("General"));
@@ -102,8 +101,6 @@ void GraphicsWindow::OnBackendChanged(const QString& backend)
     m_tab_widget->addTab(m_hacks_widget, tr("Hacks"));
     m_tab_widget->addTab(m_advanced_widget, tr("Advanced"));
   }
-
-  emit BackendChanged(backend);
 }
 
 void GraphicsWindow::RegisterWidget(GraphicsWidget* widget)

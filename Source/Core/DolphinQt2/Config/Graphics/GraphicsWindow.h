@@ -31,13 +31,11 @@ public:
 
   void RegisterWidget(GraphicsWidget* widget);
   bool eventFilter(QObject* object, QEvent* event) override;
-signals:
-  void BackendChanged(const QString& backend);
 
 private:
   void CreateMainLayout();
   void ConnectWidgets();
-  void OnBackendChanged(const QString& backend);
+  void OnBackendChanged(const std::string& backend);
   void OnDescriptionAdded(QWidget* widget, const char* description);
 
   QTabWidget* m_tab_widget;

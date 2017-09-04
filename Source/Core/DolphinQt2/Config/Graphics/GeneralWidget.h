@@ -21,8 +21,6 @@ class GeneralWidget final : public GraphicsWidget
   Q_OBJECT
 public:
   explicit GeneralWidget(X11Utils::XRRConfiguration* xrr_config, GraphicsWindow* parent);
-signals:
-  void BackendChanged(const QString& backend);
 
 private:
   void LoadSettings() override;
@@ -32,7 +30,7 @@ private:
   void ConnectWidgets();
   void AddDescriptions();
 
-  void OnBackendChanged(const QString& backend_name);
+  void OnBackendChanged(const std::string& backend_name);
   void OnEmulationStateChanged(bool running);
 
   // Video
