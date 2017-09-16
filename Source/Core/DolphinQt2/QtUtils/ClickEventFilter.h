@@ -10,6 +10,9 @@ class ClickEventFilter : public QObject
 {
   Q_OBJECT
 signals:
+  void clicked();
+  void middleClicked();
+  void rightClicked();
   void doubleClicked();
 
 private:
