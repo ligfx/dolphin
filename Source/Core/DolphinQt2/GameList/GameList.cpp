@@ -29,7 +29,7 @@
 #include "DolphinQt2/GameList/GridProxyModel.h"
 #include "DolphinQt2/GameList/ListProxyModel.h"
 #include "DolphinQt2/QtUtils/ActionHelper.h"
-#include "DolphinQt2/QtUtils/DoubleClickEventFilter.h"
+#include "DolphinQt2/QtUtils/ClickEventFilter.h"
 #include "DolphinQt2/Settings.h"
 #include "DolphinQt2/WiiUpdate.h"
 
@@ -128,9 +128,9 @@ void GameList::MakeEmptyView()
                       "Double-click here to set a games directory..."));
   m_empty->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
 
-  auto event_filter = new DoubleClickEventFilter{};
+  auto event_filter = new ClickEventFilter{};
   m_empty->installEventFilter(event_filter);
-  connect(event_filter, &DoubleClickEventFilter::doubleClicked, [this] {
+  connect(event_filter, &ClickEventFilter::doubleClicked, [this] {
     auto current_dir = QDir::currentPath();
     auto dir = QFileDialog::getExistingDirectory(this, tr("Select a Directory"), current_dir);
     if (!dir.isEmpty())

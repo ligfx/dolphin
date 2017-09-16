@@ -101,7 +101,7 @@
     <QtMoc Include="NetPlay\NetPlayDialog.h" />
     <QtMoc Include="NetPlay\NetPlaySetupDialog.h" />
     <QtMoc Include="NetPlay\PadMappingDialog.h" />
-    <QtMoc Include="QtUtils\DoubleClickEventFilter.h" />
+    <QtMoc Include="QtUtils\ClickEventFilter.h" />
     <QtMoc Include="QtUtils\WindowActivationEventFilter.h" />
     <QtMoc Include="RenderWidget.h" />
     <QtMoc Include="Settings.h" />
@@ -116,6 +116,7 @@
     <ClCompile Include="$(QtMocOutPrefix)AudioPane.cpp" />
     <ClCompile Include="$(QtMocOutPrefix)AdvancedWidget.cpp" />
     <ClCompile Include="$(QtMocOutPrefix)CheatWarningWidget.cpp" />
+    <ClCompile Include="$(QtMocOutPrefix)ClickEventFilter.cpp" />
     <ClCompile Include="$(QtMocOutPrefix)ControllersWindow.cpp" />
     <ClCompile Include="$(QtMocOutPrefix)EnhancementsWidget.cpp" />
     <ClCompile Include="$(QtMocOutPrefix)FIFOPlayerWindow.cpp" />
@@ -153,7 +154,6 @@
     <ClCompile Include="$(QtMocOutPrefix)NetPlaySetupDialog.cpp" />
     <ClCompile Include="$(QtMocOutPrefix)PadMappingDialog.cpp" />
     <ClCompile Include="$(QtMocOutPrefix)PropertiesDialog.cpp" />
-    <ClCompile Include="$(QtMocOutPrefix)DoubleClickEventFilter.cpp" />
     <ClCompile Include="$(QtMocOutPrefix)RenderWidget.cpp" />
     <ClCompile Include="$(QtMocOutPrefix)Settings.cpp" />
     <ClCompile Include="$(QtMocOutPrefix)SettingsWindow.cpp" />
@@ -217,7 +217,7 @@
     <ClCompile Include="NetPlay\NetPlayDialog.cpp" />
     <ClCompile Include="NetPlay\NetPlaySetupDialog.cpp" />
     <ClCompile Include="NetPlay\PadMappingDialog.cpp" />
-    <ClCompile Include="QtUtils\DoubleClickEventFilter.cpp" />
+    <ClCompile Include="QtUtils\ClickEventFilter.cpp" />
     <ClCompile Include="QtUtils\ElidedButton.cpp" />
     <ClCompile Include="QtUtils\ListTabWidget.cpp" />
     <ClCompile Include="QtUtils\VerticalScrollArea.cpp" />

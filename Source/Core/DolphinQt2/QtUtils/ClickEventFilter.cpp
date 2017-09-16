@@ -4,9 +4,9 @@
 
 #include <QEvent>
 
-#include "DolphinQt2/QtUtils/DoubleClickEventFilter.h"
+#include "DolphinQt2/QtUtils/ClickEventFilter.h"
 
-bool DoubleClickEventFilter::eventFilter(QObject* object, QEvent* event)
+bool ClickEventFilter::eventFilter(QObject* object, QEvent* event)
 {
   if (event->type() == QEvent::MouseButtonDblClick)
     emit doubleClicked();

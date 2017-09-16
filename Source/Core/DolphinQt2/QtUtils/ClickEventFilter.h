@@ -6,7 +6,7 @@
 
 #include <QObject>
 
-class DoubleClickEventFilter : public QObject
+class ClickEventFilter : public QObject
 {
   Q_OBJECT
 signals:
