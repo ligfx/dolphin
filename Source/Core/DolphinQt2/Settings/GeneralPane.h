@@ -6,6 +6,7 @@
 
 #include <QWidget>
 
+class QButtonGroup;
 class QCheckBox;
 class QComboBox;
 class QLabel;
@@ -36,6 +37,7 @@ private:
   QCheckBox* m_checkbox_cheats;
   QLabel* m_label_speedlimit;
 
+  QButtonGroup* m_cpu_emulation_group;
   QRadioButton* m_radio_interpreter;
   QRadioButton* m_radio_cached_interpreter;
   QRadioButton* m_radio_jit;

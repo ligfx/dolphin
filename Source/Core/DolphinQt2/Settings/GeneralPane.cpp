@@ -4,6 +4,7 @@
 
 #include "DolphinQt2/Settings/GeneralPane.h"
 
+#include <QButtonGroup>
 #include <QCheckBox>
 #include <QComboBox>
 #include <QFormLayout>
@@ -52,6 +53,17 @@ void GeneralPane::ConnectLayout()
   connect(m_combobox_speedlimit,
           static_cast<void (QComboBox::*)(const QString&)>(&QComboBox::activated),
           [this](const QString& text) { OnSaveConfig(); });
+
+  m_cpu_emulation_group = new QButtonGroup(this);
+  m_cpu_emulation_group->addButton(m_radio_interpreter, PowerPC::CPUCore::CORE_INTERPRETER);
+  m_cpu_emulation_group->addButton(m_radio_cached_interpreter,
+                                   PowerPC::CPUCore::CORE_CACHEDINTERPRETER);
+  m_cpu_emulation_group->addButton(m_radio_jit, PowerPC::CPUCore::CORE_JIT64);
+  // TODO: Implement JITARM
+  connect(m_cpu_emulation_group,
+          static_cast<void (QButtonGroup::*)(int)>(&QButtonGroup::buttonClicked), this,
+          &GeneralPane::OnSaveConfig);
+
   connect(m_radio_interpreter, &QRadioButton::clicked, this, &GeneralPane::OnSaveConfig);
   connect(m_radio_cached_interpreter, &QRadioButton::clicked, this, &GeneralPane::OnSaveConfig);
   connect(m_radio_jit, &QRadioButton::clicked, this, &GeneralPane::OnSaveConfig);
@@ -145,23 +157,9 @@ void GeneralPane::LoadConfig()
     m_combobox_speedlimit->setCurrentIndex(selection);
   m_checkbox_dualcore->setChecked(SConfig::GetInstance().bCPUThread);
 
-  switch (SConfig::GetInstance().iCPUCore)
-  {
-  case PowerPC::CPUCore::CORE_INTERPRETER:
-    m_radio_interpreter->setChecked(true);
-    break;
-  case PowerPC::CPUCore::CORE_CACHEDINTERPRETER:
-    m_radio_cached_interpreter->setChecked(true);
-    break;
-  case PowerPC::CPUCore::CORE_JIT64:
-    m_radio_jit->setChecked(true);
-    break;
-  case PowerPC::CPUCore::CORE_JITARM64:
-    // TODO: Implement JITARM
-    break;
-  default:
-    break;
-  }
+  auto* core_button = m_cpu_emulation_group->button(SConfig::GetInstance().iCPUCore);
+  if (core_button)
+    core_button->setChecked(true);
 }
 
 void GeneralPane::OnSaveConfig()
@@ -172,16 +170,10 @@ void GeneralPane::OnSaveConfig()
   SConfig::GetInstance().bCPUThread = m_checkbox_dualcore->isChecked();
   Settings::Instance().SetCheatsEnabled(m_checkbox_cheats->isChecked());
   SConfig::GetInstance().m_EmulationSpeed = m_combobox_speedlimit->currentIndex() * 0.1f;
-  int engine_value = 0;
-  if (m_radio_interpreter->isChecked())
-    engine_value = PowerPC::CPUCore::CORE_INTERPRETER;
-  else if (m_radio_cached_interpreter->isChecked())
-    engine_value = PowerPC::CPUCore::CORE_CACHEDINTERPRETER;
-  else if (m_radio_jit->isChecked())
-    engine_value = PowerPC::CPUCore::CORE_JIT64;
-  else
-    engine_value = PowerPC::CPUCore::CORE_JIT64;
 
+  int engine_value = m_cpu_emulation_group->checkedId();
+  if (engine_value == -1)
+    engine_value = PowerPC::CPUCore::CORE_JIT64;
   SConfig::GetInstance().iCPUCore = engine_value;
 }
 
