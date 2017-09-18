@@ -14,7 +14,7 @@
 #include "Core/ConfigManager.h"
 #include "DolphinQt2/Config/Graphics/GraphicsBool.h"
 #include "DolphinQt2/Config/Graphics/GraphicsSlider.h"
-#include "DolphinQt2/QtUtils/Bind.h"
+#include "DolphinQt2/QtUtils/OldBind.h"
 #include "VideoCommon/VideoConfig.h"
 
 HacksWidget::HacksWidget(QWidget* parent) : QWidget(parent)

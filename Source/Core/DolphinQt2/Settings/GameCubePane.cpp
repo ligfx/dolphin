@@ -17,7 +17,7 @@
 #include "Core/Core.h"
 #include "Core/HW/EXI/EXI.h"
 #include "Core/HW/EXI/EXI_Device.h"
-#include "DolphinQt2/QtUtils/Bind.h"
+#include "DolphinQt2/QtUtils/OldBind.h"
 // #include "DolphinQt2/QtUtils/ConnectToSubscribable.h"
 #include "DolphinQt2/QtUtils/QueueOnObject.h"
 
