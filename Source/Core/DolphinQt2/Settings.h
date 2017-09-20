@@ -39,6 +39,7 @@ public:
   static Settings& Instance();
 
   // UI
+  QString GetThemeName() const;
   void SetThemeName(const QString& theme_name);
 
   bool IsInDevelopmentWarningEnabled() const;

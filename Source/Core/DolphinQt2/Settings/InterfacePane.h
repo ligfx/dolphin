@@ -20,9 +20,7 @@ private:
   void CreateLayout();
   void CreateUI();
   void CreateInGame();
-  void ConnectLayout();
-  void LoadConfig();
-  void OnSaveConfig();
+  void BindLayout();
 
   QVBoxLayout* m_main_layout;
   QComboBox* m_combobox_language;
@@ -40,3 +38,5 @@ private:
   QCheckBox* m_checkbox_pause_on_focus_lost;
   QCheckBox* m_checkbox_hide_mouse;
 };
+
+Q_DECLARE_METATYPE(std::string);

@@ -82,6 +82,7 @@ set(SRCS
   NetPlay/NetPlayDialog.cpp
   NetPlay/NetPlaySetupDialog.cpp
   NetPlay/PadMappingDialog.cpp
+  QtUtils/Bind.cpp
   QtUtils/ClickEventFilter.cpp
   QtUtils/ElidedButton.cpp
   QtUtils/ListTabWidget.cpp

@@ -33,6 +33,11 @@ Settings& Settings::Instance()
   return settings;
 }
 
+QString Settings::GetThemeName() const
+{
+  return QString::fromStdString(SConfig::GetInstance().theme_name);
+}
+
 void Settings::SetThemeName(const QString& theme_name)
 {
   SConfig::GetInstance().theme_name = theme_name.toStdString();

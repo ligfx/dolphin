@@ -18,6 +18,7 @@
 #include "Common/StringUtil.h"
 #include "Core/ConfigManager.h"
 
+#include "DolphinQt2/QtUtils/Bind.h"
 #include "DolphinQt2/Settings.h"
 
 static QComboBox* MakeLanguageComboBox()
@@ -72,9 +73,10 @@ static QComboBox* MakeLanguageComboBox()
 
 InterfacePane::InterfacePane(QWidget* parent) : QWidget(parent)
 {
+  qRegisterMetaType<std::string>();
+
   CreateLayout();
-  ConnectLayout();
-  LoadConfig();
+  BindLayout();
 }
 
 void InterfacePane::CreateLayout()
@@ -151,69 +153,33 @@ void InterfacePane::CreateInGame()
   groupbox_layout->addWidget(m_checkbox_hide_mouse);
 }
 
-void InterfacePane::ConnectLayout()
+void InterfacePane::BindLayout()
 {
-  connect(m_checkbox_auto_window, &QCheckBox::clicked, this, &InterfacePane::OnSaveConfig);
-  connect(m_checkbox_top_window, &QCheckBox::clicked, this, &InterfacePane::OnSaveConfig);
-  connect(m_checkbox_render_to_window, &QCheckBox::clicked, this, &InterfacePane::OnSaveConfig);
-  connect(m_checkbox_use_builtin_title_database, &QCheckBox::clicked, this,
-          &InterfacePane::OnSaveConfig);
+  Bind(m_checkbox_auto_window, SConfig::GetInstance().bRenderWindowAutoSize);
+  Bind(m_checkbox_top_window, SConfig::GetInstance().bKeepWindowOnTop);
+  Bind(m_checkbox_render_to_window, SConfig::GetInstance().bRenderToMain);
+  Bind(m_checkbox_use_builtin_title_database, SConfig::GetInstance().m_use_builtin_title_database);
+  Bind(m_combobox_language, SConfig::GetInstance().m_InterfaceLanguage);
+  connect(m_combobox_language,
+          static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), [this] {
+            QMessageBox::information(
+                this, tr("Restart Required"),
+                tr("You must restart Dolphin in order for the change to take effect."));
+          });
+
+  m_combobox_theme->setCurrentIndex(
+      m_combobox_theme->findText(Settings::Instance().GetThemeName()));
   connect(m_combobox_theme, static_cast<void (QComboBox::*)(const QString&)>(&QComboBox::activated),
           &Settings::Instance(), &Settings::SetThemeName);
-  connect(m_combobox_language, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this,
-          &InterfacePane::OnSaveConfig);
-  connect(m_checkbox_confirm_on_stop, &QCheckBox::clicked, this, &InterfacePane::OnSaveConfig);
-  connect(m_checkbox_use_panic_handlers, &QCheckBox::clicked, this, &InterfacePane::OnSaveConfig);
-  connect(m_checkbox_enable_osd, &QCheckBox::clicked, this, &InterfacePane::OnSaveConfig);
-  connect(m_checkbox_pause_on_focus_lost, &QCheckBox::clicked, this, &InterfacePane::OnSaveConfig);
+
+  // In Game Options
+  Bind(m_checkbox_confirm_on_stop, SConfig::GetInstance().bConfirmStop);
+  Bind(m_checkbox_use_panic_handlers, SConfig::GetInstance().bUsePanicHandlers);
+  Bind(m_checkbox_enable_osd, SConfig::GetInstance().bOnScreenDisplayMessages);
+  Bind(m_checkbox_show_active_title, SConfig::GetInstance().m_show_active_title);
+  Bind(m_checkbox_pause_on_focus_lost, SConfig::GetInstance().m_PauseOnFocusLost);
+
+  m_checkbox_hide_mouse->setChecked(Settings::Instance().GetHideCursor());
   connect(m_checkbox_hide_mouse, &QCheckBox::clicked, &Settings::Instance(),
           &Settings::SetHideCursor);
-}
-
-void InterfacePane::LoadConfig()
-{
-  const SConfig& startup_params = SConfig::GetInstance();
-  m_checkbox_auto_window->setChecked(startup_params.bRenderWindowAutoSize);
-  m_checkbox_top_window->setChecked(startup_params.bKeepWindowOnTop);
-  m_checkbox_render_to_window->setChecked(startup_params.bRenderToMain);
-  m_checkbox_use_builtin_title_database->setChecked(startup_params.m_use_builtin_title_database);
-  m_combobox_language->setCurrentIndex(m_combobox_language->findData(
-      QString::fromStdString(SConfig::GetInstance().m_InterfaceLanguage)));
-  m_combobox_theme->setCurrentIndex(
-      m_combobox_theme->findText(QString::fromStdString(SConfig::GetInstance().theme_name)));
-
-  // In Game Options
-  m_checkbox_confirm_on_stop->setChecked(startup_params.bConfirmStop);
-  m_checkbox_use_panic_handlers->setChecked(startup_params.bUsePanicHandlers);
-  m_checkbox_enable_osd->setChecked(startup_params.bOnScreenDisplayMessages);
-  m_checkbox_show_active_title->setChecked(startup_params.m_show_active_title);
-  m_checkbox_pause_on_focus_lost->setChecked(startup_params.m_PauseOnFocusLost);
-  m_checkbox_hide_mouse->setChecked(Settings::Instance().GetHideCursor());
-}
-
-void InterfacePane::OnSaveConfig()
-{
-  SConfig& settings = SConfig::GetInstance();
-  settings.bRenderWindowAutoSize = m_checkbox_auto_window->isChecked();
-  settings.bKeepWindowOnTop = m_checkbox_top_window->isChecked();
-  settings.bRenderToMain = m_checkbox_render_to_window->isChecked();
-  settings.m_use_builtin_title_database = m_checkbox_use_builtin_title_database->isChecked();
-
-  // In Game Options
-  settings.bConfirmStop = m_checkbox_confirm_on_stop->isChecked();
-  settings.bUsePanicHandlers = m_checkbox_use_panic_handlers->isChecked();
-  settings.bOnScreenDisplayMessages = m_checkbox_enable_osd->isChecked();
-  settings.m_show_active_title = m_checkbox_show_active_title->isChecked();
-  settings.m_PauseOnFocusLost = m_checkbox_pause_on_focus_lost->isChecked();
-
-  auto new_language = m_combobox_language->currentData().toString().toStdString();
-  if (new_language != SConfig::GetInstance().m_InterfaceLanguage)
-  {
-    SConfig::GetInstance().m_InterfaceLanguage = new_language;
-    QMessageBox::information(
-        this, tr("Restart Required"),
-        tr("You must restart Dolphin in order for the change to take effect."));
-  }
-
-  settings.SaveSettings();
 }
