@@ -27,28 +27,11 @@ namespace DiscIO
 {
 constexpr u32 FST_ENTRY_SIZE = 4 * 3;  // An FST entry consists of three 32-bit integers
 
-// Set everything manually.
-FileInfoGCWii::FileInfoGCWii(const FileSystemGCWii* filesystem, u32 index)
-    : m_filesystem(filesystem), m_index(index)
-{
-}
-
-// Copy data that is common to the whole file system.
-FileInfoGCWii::FileInfoGCWii(const FileInfoGCWii& file_info, u32 index)
-    : FileInfoGCWii(file_info.m_filesystem, index)
-{
-}
-
 FileInfoGCWii::~FileInfoGCWii() = default;
-
-uintptr_t FileInfoGCWii::GetAddress() const
-{
-  return m_filesystem->GetAddress(m_index);
-}
 
 FileInfo& FileInfoGCWii::operator++()
 {
-  m_index = m_filesystem->GetNextIndex(m_index);
+  m_index = static_cast<const FileSystemGCWii*>(m_filesystem)->GetNextIndex(m_index);
   return *this;
 }
 
@@ -64,38 +47,8 @@ FileInfo::const_iterator FileInfoGCWii::begin() const
 
 FileInfo::const_iterator FileInfoGCWii::end() const
 {
-  return const_iterator(
-      std::make_unique<FileInfoGCWii>(*this, m_filesystem->GetNextIndex(m_index)));
-}
-
-u32 FileInfoGCWii::GetSize() const
-{
-  return m_filesystem->GetSize(m_index);
-}
-
-u64 FileInfoGCWii::GetOffset() const
-{
-  return m_filesystem->GetOffset(m_index);
-}
-
-bool FileInfoGCWii::IsDirectory() const
-{
-  return m_filesystem->IsDirectory(m_index);
-}
-
-u32 FileInfoGCWii::GetTotalChildren() const
-{
-  return m_filesystem->GetTotalChildren(m_index);
-}
-
-std::string FileInfoGCWii::GetName() const
-{
-  return m_filesystem->GetName(m_index);
-}
-
-std::string FileInfoGCWii::GetPath() const
-{
-  return m_filesystem->GetPath(m_index);
+  return const_iterator(std::make_unique<FileInfoGCWii>(
+      *this, static_cast<const FileSystemGCWii*>(m_filesystem)->GetNextIndex(m_index)));
 }
 
 FileSystemGCWii::FileSystemGCWii(const Volume* volume, const Partition& partition)
@@ -312,11 +265,6 @@ std::string FileSystemGCWii::GetPath(u32 index) const
     }
     return GetPath(potential_parent_index) + GetName(index);
   }
-}
-
-uintptr_t FileSystemGCWii::GetAddress(u32 index) const
-{
-  return reinterpret_cast<uintptr_t>(&m_fst[FST_ENTRY_SIZE * index]);
 }
 
 bool FileSystemGCWii::IsValid(u32 index, u64 fst_size, u32 parent_index) const

@@ -15,6 +15,8 @@
 
 namespace DiscIO
 {
+class FileSystem;
+
 // file info of an FST entry
 class FileInfo
 {
@@ -69,10 +71,14 @@ public:
     std::unique_ptr<FileInfo> m_file_info;
   };
 
+  FileInfo();
+  FileInfo(const FileSystem* filesystem, u32 index);
+  FileInfo(const FileInfo& other);
+  FileInfo(const FileInfo& other, u32 index);
   virtual ~FileInfo();
 
-  bool operator==(const FileInfo& other) const { return GetAddress() == other.GetAddress(); }
-  bool operator!=(const FileInfo& other) const { return !operator==(other); }
+  bool operator==(const FileInfo& other) const;
+  bool operator!=(const FileInfo& other) const;
   virtual std::unique_ptr<FileInfo> clone() const = 0;
   virtual const_iterator cbegin() const { return begin(); }
   virtual const_iterator cend() const { return end(); }
@@ -81,26 +87,26 @@ public:
 
   // The offset of a file on the disc (inside the partition, if there is one).
   // Not guaranteed to return a meaningful value for directories.
-  virtual u64 GetOffset() const = 0;
+  u64 GetOffset() const;
   // The size of a file.
   // Not guaranteed to return a meaningful value for directories.
-  virtual u32 GetSize() const = 0;
-  virtual bool IsDirectory() const = 0;
+  u32 GetSize() const;
+  bool IsDirectory() const;
   // The number of files and directories in a directory, including those in subdirectories.
   // Not guaranteed to return a meaningful value for files.
-  virtual u32 GetTotalChildren() const = 0;
-  virtual std::string GetName() const = 0;
+  u32 GetTotalChildren() const;
+  std::string GetName() const;
   // GetPath will find the parents of the current object and call GetName on them,
   // so it's slower than other functions. If you're traversing through folders
   // to get a file and its path, building the path while traversing is faster.
-  virtual std::string GetPath() const = 0;
+  std::string GetPath() const;
 
 protected:
-  // Only used for comparisons with other file info objects
-  virtual uintptr_t GetAddress() const = 0;
-
   // Called by iterators
   virtual FileInfo& operator++() = 0;
+
+  const FileSystem* m_filesystem;
+  u32 m_index;
 };
 
 class FileSystem
@@ -117,6 +123,13 @@ public:
   virtual std::unique_ptr<FileInfo> FindFileInfo(const std::string& path) const = 0;
   // Returns nullptr if not found
   virtual std::unique_ptr<FileInfo> FindFileInfo(u64 disc_offset) const = 0;
+
+  virtual u64 GetOffset(u32 index) const = 0;
+  virtual u32 GetSize(u32 index) const = 0;
+  virtual bool IsDirectory(u32 index) const = 0;
+  virtual u32 GetTotalChildren(u32 index) const = 0;
+  virtual std::string GetName(u32 index) const = 0;
+  virtual std::string GetPath(u32 index) const = 0;
 };
 
 // Calling Volume::GetFileSystem instead of manually constructing a filesystem is recommended,

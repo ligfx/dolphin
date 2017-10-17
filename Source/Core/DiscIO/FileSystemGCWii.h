@@ -25,35 +25,15 @@ class FileInfoGCWii : public FileInfo
   friend class FileSystemGCWii;
 
 public:
-  // None of the constructors take ownership of FST pointers
-
-  // Set everything manually
-  FileInfoGCWii(const FileSystemGCWii* filesystem, u32 index);
-  // Copy another object
-  FileInfoGCWii(const FileInfoGCWii& file_info) = default;
-  // Copy data that is common to the whole file system
-  FileInfoGCWii(const FileInfoGCWii& file_info, u32 index);
-
+  using FileInfo::FileInfo;
   ~FileInfoGCWii() override;
 
   std::unique_ptr<FileInfo> clone() const override;
   const_iterator begin() const override;
   const_iterator end() const override;
 
-  u64 GetOffset() const override;
-  u32 GetSize() const override;
-  bool IsDirectory() const override;
-  u32 GetTotalChildren() const override;
-  std::string GetName() const override;
-  std::string GetPath() const override;
-
 protected:
-  uintptr_t GetAddress() const override;
   FileInfo& operator++() override;
-
-private:
-  const FileSystemGCWii* m_filesystem;
-  u32 m_index;
 };
 
 class FileSystemGCWii : public FileSystem
@@ -69,12 +49,12 @@ public:
   std::unique_ptr<FileInfo> FindFileInfo(const std::string& path) const override;
   std::unique_ptr<FileInfo> FindFileInfo(u64 disc_offset) const override;
 
-  u64 GetOffset(u32 index) const;
-  u32 GetSize(u32 index) const;
-  bool IsDirectory(u32 index) const;
-  u32 GetTotalChildren(u32 index) const;
-  std::string GetName(u32 index) const;
-  std::string GetPath(u32 index) const;
+  u64 GetOffset(u32 index) const override;
+  u32 GetSize(u32 index) const override;
+  bool IsDirectory(u32 index) const override;
+  u32 GetTotalChildren(u32 index) const override;
+  std::string GetName(u32 index) const override;
+  std::string GetPath(u32 index) const override;
 
 private:
   enum class EntryProperty
@@ -102,7 +82,6 @@ private:
   // returns the index of the next item that isn't inside it.
   u32 GetNextIndex(u32 index) const;
 
-  uintptr_t GetAddress(u32 index) const;
   bool IsValid(u32 index, u64 fst_size, u32 parent_index) const;
 
   bool m_valid;
