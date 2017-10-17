@@ -19,7 +19,7 @@ class FileInfoIterator;
 class FileSystem;
 
 // file info of an FST entry
-class FileInfo
+class FileInfo final
 {
   friend class FileInfoIterator;
 
@@ -51,6 +51,8 @@ public:
   // so it's slower than other functions. If you're traversing through folders
   // to get a file and its path, building the path while traversing is faster.
   std::string GetPath() const;
+
+  u32 AsU32() const;
 
 protected:
   const FileSystem* m_filesystem;

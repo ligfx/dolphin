@@ -69,7 +69,7 @@ FileSystemGCWii::FileSystemGCWii(const Volume* volume, const Partition& partitio
   }
 
   // Create the root object
-  m_root = FileInfoGCWii(this, 0);
+  m_root = FileInfo(this, 0);
   if (!m_root.IsDirectory())
   {
     ERROR_LOG(DISCIO, "File system root is not a directory");
@@ -150,7 +150,7 @@ std::unique_ptr<FileInfo> FileSystemGCWii::FindFileInfo(u64 disc_offset) const
     u32 fst_entries = m_root.GetSize();
     for (u32 i = 0; i < fst_entries; i++)
     {
-      FileInfoGCWii file_info(m_root, i);
+      FileInfo file_info(m_root, i);
       if (!file_info.IsDirectory())
       {
         const u32 size = file_info.GetSize();
@@ -164,7 +164,7 @@ std::unique_ptr<FileInfo> FileSystemGCWii::FindFileInfo(u64 disc_offset) const
   const auto it = m_offset_file_info_cache.upper_bound(disc_offset);
   if (it == m_offset_file_info_cache.end())
     return nullptr;
-  std::unique_ptr<FileInfo> result(std::make_unique<FileInfoGCWii>(m_root, it->second));
+  std::unique_ptr<FileInfo> result(std::make_unique<FileInfo>(m_root, it->second));
 
   // If the file's start isn't after disc_offset, success
   if (result->GetOffset() <= disc_offset)
@@ -278,9 +278,9 @@ bool FileSystemGCWii::IsValid(u32 index, u64 fst_size, u32 parent_index) const
       return false;
     }
 
-    for (const FileInfo& child : FileInfoGCWii(this, index))
+    for (const FileInfo& child : FileInfo(this, index))
     {
-      if (!IsValid(static_cast<const FileInfoGCWii&>(child).m_index, fst_size, index))
+      if (!IsValid(child.AsU32(), fst_size, index))
         return false;
     }
   }

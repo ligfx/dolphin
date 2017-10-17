@@ -16,22 +16,11 @@
 
 namespace DiscIO
 {
-class FileSystemGCWii;
 class Volume;
 struct Partition;
 
-class FileInfoGCWii : public FileInfo
-{
-  friend class FileSystemGCWii;
-
-public:
-  using FileInfo::FileInfo;
-};
-
 class FileSystemGCWii : public FileSystem
 {
-  friend class FileInfoGCWii;
-
 public:
   FileSystemGCWii(const Volume* volume, const Partition& partition);
   ~FileSystemGCWii() override;
@@ -80,7 +69,7 @@ private:
 
   bool m_valid;
   std::vector<u8> m_fst;
-  FileInfoGCWii m_root;
+  FileInfo m_root;
   u8 m_offset_shift;
   u32 m_total_file_infos;
   // Maps the end offset of files to FST indexes

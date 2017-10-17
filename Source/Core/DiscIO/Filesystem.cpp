@@ -70,6 +70,11 @@ std::string FileInfo::GetPath() const
   return m_filesystem->GetPath(m_index);
 }
 
+u32 FileInfo::AsU32() const
+{
+  return m_index;
+};
+
 FileSystem::~FileSystem() = default;
 
 FileInfoIterator::FileInfoIterator() : m_file_info()
