@@ -26,14 +26,6 @@ class FileInfoGCWii : public FileInfo
 
 public:
   using FileInfo::FileInfo;
-  ~FileInfoGCWii() override;
-
-  std::unique_ptr<FileInfo> clone() const override;
-  const_iterator begin() const override;
-  const_iterator end() const override;
-
-protected:
-  FileInfo& operator++() override;
 };
 
 class FileSystemGCWii : public FileSystem
@@ -55,6 +47,11 @@ public:
   u32 GetTotalChildren(u32 index) const override;
   std::string GetName(u32 index) const override;
   std::string GetPath(u32 index) const override;
+
+  u32 GetFirstChildIndex(u32 index) const override;
+  // For files, returns the index of the next item. For directories,
+  // returns the index of the next item that isn't inside it.
+  u32 GetNextIndex(u32 index) const override;
 
 private:
   enum class EntryProperty
@@ -78,9 +75,6 @@ private:
   u32 Get(u32 index, EntryProperty entry_property) const;
   // Returns the name offset, excluding the directory identification byte
   u64 GetNameOffset(u32 index) const;
-  // For files, returns the index of the next item. For directories,
-  // returns the index of the next item that isn't inside it.
-  u32 GetNextIndex(u32 index) const;
 
   bool IsValid(u32 index, u64 fst_size, u32 parent_index) const;
 

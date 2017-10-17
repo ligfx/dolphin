@@ -15,75 +15,26 @@
 
 namespace DiscIO
 {
+class FileInfoIterator;
 class FileSystem;
 
 // file info of an FST entry
 class FileInfo
 {
-  friend class const_iterator;
+  friend class FileInfoIterator;
 
 public:
-  class const_iterator final
-  {
-  public:
-    using iterator_category = std::forward_iterator_tag;
-    using value_type = const FileInfo;
-    using difference_type = std::ptrdiff_t;
-    using pointer = value_type*;
-    using reference = value_type&;
-
-    const_iterator() : m_file_info(nullptr) {}
-    const_iterator(std::unique_ptr<FileInfo> file_info) : m_file_info(std::move(file_info)) {}
-    const_iterator(const const_iterator& it) : m_file_info(it.m_file_info->clone()) {}
-    const_iterator(const_iterator&& it) noexcept : m_file_info(std::move(it.m_file_info)) {}
-    ~const_iterator() = default;
-    const_iterator& operator=(const const_iterator& it)
-    {
-      m_file_info = it.m_file_info ? it.m_file_info->clone() : nullptr;
-      return *this;
-    }
-    const_iterator& operator=(const_iterator&& it) noexcept
-    {
-      m_file_info = std::move(it.m_file_info);
-      return *this;
-    }
-    const_iterator& operator++()
-    {
-      ++*m_file_info;
-      return *this;
-    }
-    const_iterator operator++(int)
-    {
-      const_iterator old = *this;
-      ++*m_file_info;
-      return old;
-    }
-    bool operator==(const const_iterator& it) const
-    {
-      return m_file_info ? (it.m_file_info && *m_file_info == *it.m_file_info) : (!it.m_file_info);
-    }
-    bool operator!=(const const_iterator& it) const { return !operator==(it); }
-    // Incrementing or destroying an iterator will invalidate its returned references and
-    // pointers, but will not invalidate copies of the iterator or file info object.
-    const FileInfo& operator*() const { return *m_file_info.get(); }
-    const FileInfo* operator->() const { return m_file_info.get(); }
-  private:
-    std::unique_ptr<FileInfo> m_file_info;
-  };
-
   FileInfo();
   FileInfo(const FileSystem* filesystem, u32 index);
   FileInfo(const FileInfo& other);
   FileInfo(const FileInfo& other, u32 index);
-  virtual ~FileInfo();
 
   bool operator==(const FileInfo& other) const;
   bool operator!=(const FileInfo& other) const;
-  virtual std::unique_ptr<FileInfo> clone() const = 0;
-  virtual const_iterator cbegin() const { return begin(); }
-  virtual const_iterator cend() const { return end(); }
-  virtual const_iterator begin() const = 0;
-  virtual const_iterator end() const = 0;
+  FileInfoIterator cbegin() const;
+  FileInfoIterator cend() const;
+  FileInfoIterator begin() const;
+  FileInfoIterator end() const;
 
   // The offset of a file on the disc (inside the partition, if there is one).
   // Not guaranteed to return a meaningful value for directories.
@@ -102,9 +53,6 @@ public:
   std::string GetPath() const;
 
 protected:
-  // Called by iterators
-  virtual FileInfo& operator++() = 0;
-
   const FileSystem* m_filesystem;
   u32 m_index;
 };
@@ -130,10 +78,39 @@ public:
   virtual u32 GetTotalChildren(u32 index) const = 0;
   virtual std::string GetName(u32 index) const = 0;
   virtual std::string GetPath(u32 index) const = 0;
+
+  virtual u32 GetFirstChildIndex(u32 index) const = 0;
+  // For files, returns the index of the next item. For directories,
+  // returns the index of the next item that isn't inside it.
+  virtual u32 GetNextIndex(u32 index) const = 0;
 };
 
 // Calling Volume::GetFileSystem instead of manually constructing a filesystem is recommended,
 // because it will check IsValid for you, will automatically pick the right type of filesystem,
 // and will cache the filesystem in case it's needed again later.
+
+class FileInfoIterator final
+{
+public:
+  using iterator_category = std::forward_iterator_tag;
+  using value_type = const FileInfo;
+  using difference_type = std::ptrdiff_t;
+  using pointer = value_type*;
+  using reference = value_type&;
+
+  FileInfoIterator();
+  FileInfoIterator(FileInfo file_info);
+  FileInfoIterator& operator++();
+  FileInfoIterator operator++(int);
+  bool operator==(const FileInfoIterator& it) const;
+  bool operator!=(const FileInfoIterator& it) const;
+  // Incrementing or destroying an iterator will invalidate its returned references and
+  // pointers, but will not invalidate copies of the iterator or file info object.
+  const FileInfo& operator*() const;
+  const FileInfo* operator->() const;
+
+private:
+  FileInfo m_file_info;
+};
 
 }  // namespace

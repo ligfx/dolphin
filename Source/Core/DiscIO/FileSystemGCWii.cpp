@@ -27,30 +27,6 @@ namespace DiscIO
 {
 constexpr u32 FST_ENTRY_SIZE = 4 * 3;  // An FST entry consists of three 32-bit integers
 
-FileInfoGCWii::~FileInfoGCWii() = default;
-
-FileInfo& FileInfoGCWii::operator++()
-{
-  m_index = static_cast<const FileSystemGCWii*>(m_filesystem)->GetNextIndex(m_index);
-  return *this;
-}
-
-std::unique_ptr<FileInfo> FileInfoGCWii::clone() const
-{
-  return std::make_unique<FileInfoGCWii>(*this);
-}
-
-FileInfo::const_iterator FileInfoGCWii::begin() const
-{
-  return const_iterator(std::make_unique<FileInfoGCWii>(*this, m_index + 1));
-}
-
-FileInfo::const_iterator FileInfoGCWii::end() const
-{
-  return const_iterator(std::make_unique<FileInfoGCWii>(
-      *this, static_cast<const FileSystemGCWii*>(m_filesystem)->GetNextIndex(m_index)));
-}
-
 FileSystemGCWii::FileSystemGCWii(const Volume* volume, const Partition& partition)
     : m_valid(false), m_root(nullptr, 0)
 {
@@ -140,7 +116,7 @@ std::unique_ptr<FileInfo> FileSystemGCWii::FindFileInfo(const std::string& path,
 
   const size_t name_start = path.find_first_not_of('/');
   if (name_start == std::string::npos)
-    return file_info.clone();  // We're done
+    return std::make_unique<FileInfo>(file_info);  // We're done
 
   const size_t name_end = path.find('/', name_start);
   const std::string name = path.substr(name_start, name_end - name_start);
@@ -207,6 +183,11 @@ u64 FileSystemGCWii::GetNameOffset(u32 index) const
 {
   return static_cast<u64>(FST_ENTRY_SIZE) * m_total_file_infos +
          (Get(index, EntryProperty::NAME_OFFSET) & 0xFFFFFF);
+}
+
+u32 FileSystemGCWii::GetFirstChildIndex(u32 index) const
+{
+  return index + 1;
 }
 
 u32 FileSystemGCWii::GetNextIndex(u32 index) const
