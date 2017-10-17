@@ -16,6 +16,7 @@
 
 namespace DiscIO
 {
+class FileSystemGCWii;
 class Volume;
 struct Partition;
 
@@ -25,9 +26,7 @@ public:
   // None of the constructors take ownership of FST pointers
 
   // Set everything manually
-  FileInfoGCWii(const u8* fst, u8 offset_shift, u32 index, u32 total_file_infos);
-  // For the root object only
-  FileInfoGCWii(const u8* fst, u8 offset_shift);
+  FileInfoGCWii(const FileSystemGCWii* filesystem, u32 index);
   // Copy another object
   FileInfoGCWii(const FileInfoGCWii& file_info) = default;
   // Copy data that is common to the whole file system
@@ -76,14 +75,14 @@ private:
   // Returns the name offset, excluding the directory identification byte
   u64 GetNameOffset() const;
 
-  const u8* m_fst;
-  u8 m_offset_shift;
+  const FileSystemGCWii* m_filesystem;
   u32 m_index;
-  u32 m_total_file_infos;
 };
 
 class FileSystemGCWii : public FileSystem
 {
+  friend class FileInfoGCWii;
+
 public:
   FileSystemGCWii(const Volume* volume, const Partition& partition);
   ~FileSystemGCWii() override;
@@ -97,8 +96,10 @@ private:
   std::unique_ptr<FileInfo> FindFileInfo(const std::string& path, const FileInfo& file_info) const;
 
   bool m_valid;
-  std::vector<u8> m_file_system_table;
+  std::vector<u8> m_fst;
   FileInfoGCWii m_root;
+  u8 m_offset_shift;
+  u32 m_total_file_infos;
   // Maps the end offset of files to FST indexes
   mutable std::map<u64, u32> m_offset_file_info_cache;
 };

@@ -28,21 +28,14 @@ namespace DiscIO
 constexpr u32 FST_ENTRY_SIZE = 4 * 3;  // An FST entry consists of three 32-bit integers
 
 // Set everything manually.
-FileInfoGCWii::FileInfoGCWii(const u8* fst, u8 offset_shift, u32 index, u32 total_file_infos)
-    : m_fst(fst), m_offset_shift(offset_shift), m_index(index), m_total_file_infos(total_file_infos)
-{
-}
-
-// For the root object only.
-// m_fst and m_index must be correctly set before GetSize() is called!
-FileInfoGCWii::FileInfoGCWii(const u8* fst, u8 offset_shift)
-    : m_fst(fst), m_offset_shift(offset_shift), m_index(0), m_total_file_infos(GetSize())
+FileInfoGCWii::FileInfoGCWii(const FileSystemGCWii* filesystem, u32 index)
+    : m_filesystem(filesystem), m_index(index)
 {
 }
 
 // Copy data that is common to the whole file system.
 FileInfoGCWii::FileInfoGCWii(const FileInfoGCWii& file_info, u32 index)
-    : FileInfoGCWii(file_info.m_fst, file_info.m_offset_shift, index, file_info.m_total_file_infos)
+    : FileInfoGCWii(file_info.m_filesystem, index)
 {
 }
 
@@ -50,7 +43,7 @@ FileInfoGCWii::~FileInfoGCWii() = default;
 
 uintptr_t FileInfoGCWii::GetAddress() const
 {
-  return reinterpret_cast<uintptr_t>(m_fst + FST_ENTRY_SIZE * m_index);
+  return reinterpret_cast<uintptr_t>(&m_filesystem->m_fst[FST_ENTRY_SIZE * m_index]);
 }
 
 u32 FileInfoGCWii::GetNextIndex() const
@@ -81,7 +74,7 @@ FileInfo::const_iterator FileInfoGCWii::end() const
 
 u32 FileInfoGCWii::Get(EntryProperty entry_property) const
 {
-  return Common::swap32(m_fst + FST_ENTRY_SIZE * m_index +
+  return Common::swap32(m_filesystem->m_fst.data() + FST_ENTRY_SIZE * m_index +
                         sizeof(u32) * static_cast<int>(entry_property));
 }
 
@@ -92,7 +85,7 @@ u32 FileInfoGCWii::GetSize() const
 
 u64 FileInfoGCWii::GetOffset() const
 {
-  return static_cast<u64>(Get(EntryProperty::FILE_OFFSET)) << m_offset_shift;
+  return static_cast<u64>(Get(EntryProperty::FILE_OFFSET)) << m_filesystem->m_offset_shift;
 }
 
 bool FileInfoGCWii::IsDirectory() const
@@ -107,7 +100,7 @@ u32 FileInfoGCWii::GetTotalChildren() const
 
 u64 FileInfoGCWii::GetNameOffset() const
 {
-  return static_cast<u64>(FST_ENTRY_SIZE) * m_total_file_infos +
+  return static_cast<u64>(FST_ENTRY_SIZE) * m_filesystem->m_total_file_infos +
          (Get(EntryProperty::NAME_OFFSET) & 0xFFFFFF);
 }
 
@@ -115,7 +108,8 @@ std::string FileInfoGCWii::GetName() const
 {
   // TODO: Should we really always use SHIFT-JIS?
   // Some names in Pikmin (NTSC-U) don't make sense without it, but is it correct?
-  return SHIFTJISToUTF8(reinterpret_cast<const char*>(m_fst + GetNameOffset()));
+  return SHIFTJISToUTF8(
+      reinterpret_cast<const char*>(m_filesystem->m_fst.data() + GetNameOffset()));
 }
 
 std::string FileInfoGCWii::GetPath() const
@@ -185,14 +179,13 @@ bool FileInfoGCWii::IsValid(u64 fst_size, const FileInfoGCWii& parent_directory)
 }
 
 FileSystemGCWii::FileSystemGCWii(const Volume* volume, const Partition& partition)
-    : m_valid(false), m_root(nullptr, 0, 0, 0)
+    : m_valid(false), m_root(nullptr, 0)
 {
-  u8 offset_shift;
   // Check if this is a GameCube or Wii disc
   if (volume->ReadSwapped<u32>(0x18, partition) == u32(0x5D1C9EA3))
-    offset_shift = 2;  // Wii file system
+    m_offset_shift = 2;  // Wii file system
   else if (volume->ReadSwapped<u32>(0x1c, partition) == u32(0xC2339F3D))
-    offset_shift = 0;  // GameCube file system
+    m_offset_shift = 0;  // GameCube file system
   else
     return;  // Invalid partition (maybe someone removed its data but not its partition table entry)
 
@@ -219,29 +212,30 @@ FileSystemGCWii::FileSystemGCWii(const Volume* volume, const Partition& partitio
   }
 
   // Read the whole FST
-  m_file_system_table.resize(*fst_size);
-  if (!volume->Read(*fst_offset, *fst_size, m_file_system_table.data(), partition))
+  m_fst.resize(*fst_size);
+  if (!volume->Read(*fst_offset, *fst_size, m_fst.data(), partition))
   {
     ERROR_LOG(DISCIO, "Couldn't read file system table");
     return;
   }
 
   // Create the root object
-  m_root = FileInfoGCWii(m_file_system_table.data(), offset_shift);
+  m_root = FileInfoGCWii(this, 0);
   if (!m_root.IsDirectory())
   {
     ERROR_LOG(DISCIO, "File system root is not a directory");
     return;
   }
+  m_total_file_infos = m_root.GetSize();
 
-  if (FST_ENTRY_SIZE * m_root.GetSize() > *fst_size)
+  if (FST_ENTRY_SIZE * m_total_file_infos > *fst_size)
   {
     ERROR_LOG(DISCIO, "File system has too many entries for its size");
     return;
   }
 
   // If the FST's final byte isn't 0, FileInfoGCWii::GetName() can read past the end
-  if (m_file_system_table[*fst_size - 1] != 0)
+  if (m_fst[*fst_size - 1] != 0)
   {
     ERROR_LOG(DISCIO, "File system does not end with a null byte");
     return;
