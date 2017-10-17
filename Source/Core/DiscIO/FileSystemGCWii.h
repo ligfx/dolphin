@@ -22,6 +22,8 @@ struct Partition;
 
 class FileInfoGCWii : public FileInfo
 {
+  friend class FileSystemGCWii;
+
 public:
   // None of the constructors take ownership of FST pointers
 
@@ -45,36 +47,11 @@ public:
   std::string GetName() const override;
   std::string GetPath() const override;
 
-  bool IsValid(u64 fst_size, const FileInfoGCWii& parent_directory) const;
-
 protected:
   uintptr_t GetAddress() const override;
   FileInfo& operator++() override;
 
 private:
-  enum class EntryProperty
-  {
-    // NAME_OFFSET's lower 3 bytes are the name's offset within the name table.
-    // NAME_OFFSET's upper 1 byte is 1 for directories and 0 for files.
-    NAME_OFFSET = 0,
-    // For files, FILE_OFFSET is the file offset in the partition,
-    // and for directories, it's the FST index of the parent directory.
-    // The root directory has its parent directory index set to 0.
-    FILE_OFFSET = 1,
-    // For files, FILE_SIZE is the file size, and for directories,
-    // it's the FST index of the next entry that isn't in the directory.
-    FILE_SIZE = 2
-  };
-
-  // For files, returns the index of the next item. For directories,
-  // returns the index of the next item that isn't inside it.
-  u32 GetNextIndex() const;
-  // Returns one of the three properties of this FST entry.
-  // Read the comments in EntryProperty for details.
-  u32 Get(EntryProperty entry_property) const;
-  // Returns the name offset, excluding the directory identification byte
-  u64 GetNameOffset() const;
-
   const FileSystemGCWii* m_filesystem;
   u32 m_index;
 };
@@ -92,8 +69,41 @@ public:
   std::unique_ptr<FileInfo> FindFileInfo(const std::string& path) const override;
   std::unique_ptr<FileInfo> FindFileInfo(u64 disc_offset) const override;
 
+  u64 GetOffset(u32 index) const;
+  u32 GetSize(u32 index) const;
+  bool IsDirectory(u32 index) const;
+  u32 GetTotalChildren(u32 index) const;
+  std::string GetName(u32 index) const;
+  std::string GetPath(u32 index) const;
+
 private:
+  enum class EntryProperty
+  {
+    // NAME_OFFSET's lower 3 bytes are the name's offset within the name table.
+    // NAME_OFFSET's upper 1 byte is 1 for directories and 0 for files.
+    NAME_OFFSET = 0,
+    // For files, FILE_OFFSET is the file offset in the partition,
+    // and for directories, it's the FST index of the parent directory.
+    // The root directory has its parent directory index set to 0.
+    FILE_OFFSET = 1,
+    // For files, FILE_SIZE is the file size, and for directories,
+    // it's the FST index of the next entry that isn't in the directory.
+    FILE_SIZE = 2
+  };
+
   std::unique_ptr<FileInfo> FindFileInfo(const std::string& path, const FileInfo& file_info) const;
+
+  // Returns one of the three properties of a FST entry.
+  // Read the comments in EntryProperty for details.
+  u32 Get(u32 index, EntryProperty entry_property) const;
+  // Returns the name offset, excluding the directory identification byte
+  u64 GetNameOffset(u32 index) const;
+  // For files, returns the index of the next item. For directories,
+  // returns the index of the next item that isn't inside it.
+  u32 GetNextIndex(u32 index) const;
+
+  uintptr_t GetAddress(u32 index) const;
+  bool IsValid(u32 index, u64 fst_size, u32 parent_index) const;
 
   bool m_valid;
   std::vector<u8> m_fst;

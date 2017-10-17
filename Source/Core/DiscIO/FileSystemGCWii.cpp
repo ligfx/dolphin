@@ -43,17 +43,12 @@ FileInfoGCWii::~FileInfoGCWii() = default;
 
 uintptr_t FileInfoGCWii::GetAddress() const
 {
-  return reinterpret_cast<uintptr_t>(&m_filesystem->m_fst[FST_ENTRY_SIZE * m_index]);
-}
-
-u32 FileInfoGCWii::GetNextIndex() const
-{
-  return IsDirectory() ? GetSize() : m_index + 1;
+  return m_filesystem->GetAddress(m_index);
 }
 
 FileInfo& FileInfoGCWii::operator++()
 {
-  m_index = GetNextIndex();
+  m_index = m_filesystem->GetNextIndex(m_index);
   return *this;
 }
 
@@ -69,113 +64,38 @@ FileInfo::const_iterator FileInfoGCWii::begin() const
 
 FileInfo::const_iterator FileInfoGCWii::end() const
 {
-  return const_iterator(std::make_unique<FileInfoGCWii>(*this, GetNextIndex()));
-}
-
-u32 FileInfoGCWii::Get(EntryProperty entry_property) const
-{
-  return Common::swap32(m_filesystem->m_fst.data() + FST_ENTRY_SIZE * m_index +
-                        sizeof(u32) * static_cast<int>(entry_property));
+  return const_iterator(
+      std::make_unique<FileInfoGCWii>(*this, m_filesystem->GetNextIndex(m_index)));
 }
 
 u32 FileInfoGCWii::GetSize() const
 {
-  return Get(EntryProperty::FILE_SIZE);
+  return m_filesystem->GetSize(m_index);
 }
 
 u64 FileInfoGCWii::GetOffset() const
 {
-  return static_cast<u64>(Get(EntryProperty::FILE_OFFSET)) << m_filesystem->m_offset_shift;
+  return m_filesystem->GetOffset(m_index);
 }
 
 bool FileInfoGCWii::IsDirectory() const
 {
-  return (Get(EntryProperty::NAME_OFFSET) & 0xFF000000) != 0;
+  return m_filesystem->IsDirectory(m_index);
 }
 
 u32 FileInfoGCWii::GetTotalChildren() const
 {
-  return Get(EntryProperty::FILE_SIZE) - (m_index + 1);
-}
-
-u64 FileInfoGCWii::GetNameOffset() const
-{
-  return static_cast<u64>(FST_ENTRY_SIZE) * m_filesystem->m_total_file_infos +
-         (Get(EntryProperty::NAME_OFFSET) & 0xFFFFFF);
+  return m_filesystem->GetTotalChildren(m_index);
 }
 
 std::string FileInfoGCWii::GetName() const
 {
-  // TODO: Should we really always use SHIFT-JIS?
-  // Some names in Pikmin (NTSC-U) don't make sense without it, but is it correct?
-  return SHIFTJISToUTF8(
-      reinterpret_cast<const char*>(m_filesystem->m_fst.data() + GetNameOffset()));
+  return m_filesystem->GetName(m_index);
 }
 
 std::string FileInfoGCWii::GetPath() const
 {
-  // The root entry doesn't have a name
-  if (m_index == 0)
-    return "";
-
-  if (IsDirectory())
-  {
-    u32 parent_directory_index = Get(EntryProperty::FILE_OFFSET);
-    return FileInfoGCWii(*this, parent_directory_index).GetPath() + GetName() + "/";
-  }
-  else
-  {
-    // The parent directory can be found by searching backwards
-    // for a directory that contains this file. The search cannot fail,
-    // because the root directory at index 0 contains all files.
-    FileInfoGCWii potential_parent(*this, m_index - 1);
-    while (!(potential_parent.IsDirectory() &&
-             potential_parent.Get(EntryProperty::FILE_SIZE) > m_index))
-    {
-      potential_parent = FileInfoGCWii(*this, potential_parent.m_index - 1);
-    }
-    return potential_parent.GetPath() + GetName();
-  }
-}
-
-bool FileInfoGCWii::IsValid(u64 fst_size, const FileInfoGCWii& parent_directory) const
-{
-  if (GetNameOffset() >= fst_size)
-  {
-    ERROR_LOG(DISCIO, "Impossibly large name offset in file system");
-    return false;
-  }
-
-  if (IsDirectory())
-  {
-    if (Get(EntryProperty::FILE_OFFSET) != parent_directory.m_index)
-    {
-      ERROR_LOG(DISCIO, "Incorrect parent offset in file system");
-      return false;
-    }
-
-    u32 size = Get(EntryProperty::FILE_SIZE);
-
-    if (size <= m_index)
-    {
-      ERROR_LOG(DISCIO, "Impossibly small directory size in file system");
-      return false;
-    }
-
-    if (size > parent_directory.Get(EntryProperty::FILE_SIZE))
-    {
-      ERROR_LOG(DISCIO, "Impossibly large directory size in file system");
-      return false;
-    }
-
-    for (const FileInfo& child : *this)
-    {
-      if (!static_cast<const FileInfoGCWii&>(child).IsValid(fst_size, *this))
-        return false;
-    }
-  }
-
-  return true;
+  return m_filesystem->GetPath(m_index);
 }
 
 FileSystemGCWii::FileSystemGCWii(const Volume* volume, const Partition& partition)
@@ -241,7 +161,7 @@ FileSystemGCWii::FileSystemGCWii(const Volume* volume, const Partition& partitio
     return;
   }
 
-  m_valid = m_root.IsValid(*fst_size, m_root);
+  m_valid = IsValid(0, *fst_size, 0);
 }
 
 FileSystemGCWii::~FileSystemGCWii() = default;
@@ -322,6 +242,121 @@ std::unique_ptr<FileInfo> FileSystemGCWii::FindFileInfo(u64 disc_offset) const
     return result;
 
   return nullptr;
+}
+
+u32 FileSystemGCWii::Get(u32 index, EntryProperty entry_property) const
+{
+  return Common::swap32(m_fst.data() + FST_ENTRY_SIZE * index +
+                        sizeof(u32) * static_cast<int>(entry_property));
+}
+
+u64 FileSystemGCWii::GetNameOffset(u32 index) const
+{
+  return static_cast<u64>(FST_ENTRY_SIZE) * m_total_file_infos +
+         (Get(index, EntryProperty::NAME_OFFSET) & 0xFFFFFF);
+}
+
+u32 FileSystemGCWii::GetNextIndex(u32 index) const
+{
+  return IsDirectory(index) ? GetSize(index) : index + 1;
+}
+
+bool FileSystemGCWii::IsDirectory(u32 index) const
+{
+  return (Get(index, EntryProperty::NAME_OFFSET) & 0xFF000000) != 0;
+}
+
+u32 FileSystemGCWii::GetSize(u32 index) const
+{
+  return Get(index, EntryProperty::FILE_SIZE);
+}
+
+u64 FileSystemGCWii::GetOffset(u32 index) const
+{
+  return static_cast<u64>(Get(index, EntryProperty::FILE_OFFSET)) << m_offset_shift;
+}
+
+u32 FileSystemGCWii::GetTotalChildren(u32 index) const
+{
+  return Get(index, EntryProperty::FILE_SIZE) - (index + 1);
+}
+
+std::string FileSystemGCWii::GetName(u32 index) const
+{
+  // TODO: Should we really always use SHIFT-JIS?
+  // Some names in Pikmin (NTSC-U) don't make sense without it, but is it correct?
+  return SHIFTJISToUTF8(reinterpret_cast<const char*>(m_fst.data() + GetNameOffset(index)));
+}
+
+std::string FileSystemGCWii::GetPath(u32 index) const
+{
+  // The root entry doesn't have a name
+  if (index == 0)
+    return "";
+
+  if (IsDirectory(index))
+  {
+    u32 parent_directory_index = Get(index, EntryProperty::FILE_OFFSET);
+    return GetPath(parent_directory_index) + GetName(index) + "/";
+  }
+  else
+  {
+    // The parent directory can be found by searching backwards
+    // for a directory that contains this file. The search cannot fail,
+    // because the root directory at index 0 contains all files.
+    u32 potential_parent_index = index - 1;
+    while (!(IsDirectory(potential_parent_index) &&
+             Get(potential_parent_index, EntryProperty::FILE_SIZE) > index))
+    {
+      --potential_parent_index;
+    }
+    return GetPath(potential_parent_index) + GetName(index);
+  }
+}
+
+uintptr_t FileSystemGCWii::GetAddress(u32 index) const
+{
+  return reinterpret_cast<uintptr_t>(&m_fst[FST_ENTRY_SIZE * index]);
+}
+
+bool FileSystemGCWii::IsValid(u32 index, u64 fst_size, u32 parent_index) const
+{
+  if (GetNameOffset(index) >= fst_size)
+  {
+    ERROR_LOG(DISCIO, "Impossibly large name offset in file system");
+    return false;
+  }
+
+  if (IsDirectory(index))
+  {
+    if (Get(index, EntryProperty::FILE_OFFSET) != parent_index)
+    {
+      ERROR_LOG(DISCIO, "Incorrect parent offset in file system");
+      return false;
+    }
+
+    u32 size = Get(index, EntryProperty::FILE_SIZE);
+
+    if (size <= index)
+    {
+      ERROR_LOG(DISCIO, "Impossibly small directory size in file system");
+      return false;
+    }
+
+    if (size > Get(parent_index, EntryProperty::FILE_SIZE))
+    {
+      ERROR_LOG(DISCIO, "Impossibly large directory size in file system");
+      return false;
+    }
+
+    for (const FileInfo& child : FileInfoGCWii(this, index))
+    {
+      if (!IsValid(static_cast<const FileInfoGCWii&>(child).m_index, fst_size, index))
+        return false;
+    }
+  }
+
+  return true;
 }
 
 }  // namespace
