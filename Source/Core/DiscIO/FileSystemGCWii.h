@@ -94,13 +94,13 @@ public:
   std::unique_ptr<FileInfo> FindFileInfo(u64 disc_offset) const override;
 
 private:
+  std::unique_ptr<FileInfo> FindFileInfo(const std::string& path, const FileInfo& file_info) const;
+
   bool m_valid;
   std::vector<u8> m_file_system_table;
   FileInfoGCWii m_root;
   // Maps the end offset of files to FST indexes
   mutable std::map<u64, u32> m_offset_file_info_cache;
-
-  std::unique_ptr<FileInfo> FindFileInfo(const std::string& path, const FileInfo& file_info) const;
 };
 
 }  // namespace
