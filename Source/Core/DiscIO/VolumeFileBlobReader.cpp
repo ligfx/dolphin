@@ -17,7 +17,7 @@ std::unique_ptr<VolumeFileBlobReader> VolumeFileBlobReader::Create(const Volume&
   if (!file_system)
     return nullptr;
 
-  std::unique_ptr<FileInfo> file_info = file_system->FindFileInfo(file_path);
+  std::optional<FileInfo> file_info = file_system->FindFileInfo(file_path);
   if (!file_info || file_info->IsDirectory())
     return nullptr;
 
@@ -26,7 +26,7 @@ std::unique_ptr<VolumeFileBlobReader> VolumeFileBlobReader::Create(const Volume&
 }
 
 VolumeFileBlobReader::VolumeFileBlobReader(const Volume& volume, const Partition& partition,
-                                           std::unique_ptr<FileInfo> file_info)
+                                           std::optional<FileInfo> file_info)
     : m_volume(volume), m_partition(partition), m_file_info(std::move(file_info))
 {
 }

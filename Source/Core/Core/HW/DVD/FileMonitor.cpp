@@ -62,7 +62,7 @@ void Log(const DiscIO::Volume& volume, const DiscIO::Partition& partition, u64 o
   if (!file_system)
     return;
 
-  const std::unique_ptr<DiscIO::FileInfo> file_info = file_system->FindFileInfo(offset);
+  const std::optional<DiscIO::FileInfo> file_info = file_system->FindFileInfo(offset);
 
   // Do nothing if no file was found at that offset
   if (!file_info)

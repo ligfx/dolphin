@@ -243,7 +243,7 @@ void FilesystemWidget::ExtractDirectory(const DiscIO::Partition& partition, cons
   if (!filesystem)
     return;
 
-  std::unique_ptr<DiscIO::FileInfo> info = filesystem->FindFileInfo(path.toStdString());
+  std::optional<DiscIO::FileInfo> info = filesystem->FindFileInfo(path.toStdString());
   u32 size = info->GetTotalChildren();
 
   QProgressDialog* dialog = new QProgressDialog(this);
@@ -276,7 +276,7 @@ void FilesystemWidget::ExtractFile(const DiscIO::Partition& partition, const QSt
     return;
 
   bool success = DiscIO::ExportFile(
-      *m_volume, partition, filesystem->FindFileInfo(path.toStdString()).get(), out.toStdString());
+      *m_volume, partition, filesystem->FindFileInfo(path.toStdString()), out.toStdString());
 
   if (success)
     QMessageBox::information(nullptr, tr("Success"), tr("Successfully extracted file."));

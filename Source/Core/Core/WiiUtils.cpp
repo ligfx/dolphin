@@ -593,7 +593,7 @@ UpdateResult DiscSystemUpdater::UpdateFromManifest(const std::string& manifest_n
     return UpdateResult::DiscReadFailed;
   }
 
-  const std::unique_ptr<DiscIO::FileInfo> update_manifest = disc_fs->FindFileInfo(manifest_name);
+  const std::optional<DiscIO::FileInfo> update_manifest = disc_fs->FindFileInfo(manifest_name);
   if (!update_manifest ||
       (update_manifest->GetSize() - sizeof(ManifestHeader)) % sizeof(Entry) != 0)
   {
@@ -610,7 +610,7 @@ UpdateResult DiscSystemUpdater::UpdateFromManifest(const std::string& manifest_n
   for (u32 i = 0; i < num_entries; ++i)
   {
     const u32 offset = sizeof(ManifestHeader) + sizeof(Entry) * i;
-    if (entry.size() != DiscIO::ReadFile(*m_volume, m_partition, update_manifest.get(),
+    if (entry.size() != DiscIO::ReadFile(*m_volume, m_partition, update_manifest.value(),
                                          entry.data(), entry.size(), offset))
     {
       ERROR_LOG(CORE, "Failed to read update information from update manifest");

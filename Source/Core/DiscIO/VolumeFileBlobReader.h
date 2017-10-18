@@ -9,6 +9,7 @@
 
 #include "Common/CommonTypes.h"
 #include "DiscIO/Blob.h"
+#include "DiscIO/Filesystem.h"
 
 namespace DiscIO
 {
@@ -29,10 +30,10 @@ public:
 
 private:
   VolumeFileBlobReader(const Volume& volume, const Partition& partition,
-                       std::unique_ptr<FileInfo> file_info);
+                       std::optional<FileInfo> file_info);
 
   const Volume& m_volume;
   const Partition& m_partition;
-  std::unique_ptr<FileInfo> m_file_info;
+  std::optional<FileInfo> m_file_info;
 };
 }  // namespace

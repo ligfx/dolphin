@@ -27,8 +27,8 @@ public:
 
   bool IsValid() const override { return m_valid; }
   FileInfo GetRoot() const override;
-  std::unique_ptr<FileInfo> FindFileInfo(const std::string& path) const override;
-  std::unique_ptr<FileInfo> FindFileInfo(u64 disc_offset) const override;
+  std::optional<FileInfo> FindFileInfo(const std::string& path) const override;
+  std::optional<FileInfo> FindFileInfo(u64 disc_offset) const override;
 
   u64 GetOffset(u32 index) const override;
   u32 GetSize(u32 index) const override;
@@ -57,7 +57,7 @@ private:
     FILE_SIZE = 2
   };
 
-  std::unique_ptr<FileInfo> FindFileInfo(const std::string& path, const FileInfo& file_info) const;
+  std::optional<FileInfo> FindFileInfo(const std::string& path, const FileInfo& file_info) const;
 
   // Returns one of the three properties of a FST entry.
   // Read the comments in EntryProperty for details.

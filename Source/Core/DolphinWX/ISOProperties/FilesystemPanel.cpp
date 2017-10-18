@@ -364,7 +364,7 @@ void FilesystemPanel::ExtractDirectories(const std::string& full_path,
   if (!file_system)
     return;
 
-  std::unique_ptr<DiscIO::FileInfo> file_info = file_system->FindFileInfo(full_path);
+  std::optional<DiscIO::FileInfo> file_info = file_system->FindFileInfo(full_path);
   u32 size = file_info->GetTotalChildren();
   u32 progress = 0;
 

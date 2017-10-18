@@ -42,8 +42,9 @@ std::string DirectoryNameForPartitionType(u32 partition_type)
   }
 }
 
-u64 ReadFile(const Volume& volume, const Partition& partition, const FileInfo* file_info,
-             u8* buffer, u64 max_buffer_size, u64 offset_in_file)
+u64 ReadFile(const Volume& volume, const Partition& partition,
+             const std::optional<FileInfo>& file_info, u8* buffer, u64 max_buffer_size,
+             u64 offset_in_file)
 {
   if (!file_info || file_info->IsDirectory() || offset_in_file >= file_info->GetSize())
     return 0;
@@ -68,8 +69,8 @@ u64 ReadFile(const Volume& volume, const Partition& partition, const std::string
   if (!file_system)
     return 0;
 
-  return ReadFile(volume, partition, file_system->FindFileInfo(path).get(), buffer, max_buffer_size,
-                  offset_in_file);
+  return ReadFile(volume, partition, file_system->FindFileInfo(path).value(), buffer,
+                  max_buffer_size, offset_in_file);
 }
 
 bool ExportData(const Volume& volume, const Partition& partition, u64 offset, u64 size,
@@ -99,8 +100,8 @@ bool ExportData(const Volume& volume, const Partition& partition, u64 offset, u6
   return true;
 }
 
-bool ExportFile(const Volume& volume, const Partition& partition, const FileInfo* file_info,
-                const std::string& export_filename)
+bool ExportFile(const Volume& volume, const Partition& partition,
+                const std::optional<FileInfo>& file_info, const std::string& export_filename)
 {
   if (!file_info || file_info->IsDirectory())
     return false;
@@ -116,7 +117,7 @@ bool ExportFile(const Volume& volume, const Partition& partition, const std::str
   if (!file_system)
     return false;
 
-  return ExportFile(volume, partition, file_system->FindFileInfo(path).get(), export_filename);
+  return ExportFile(volume, partition, file_system->FindFileInfo(path).value(), export_filename);
 }
 
 void ExportDirectory(const Volume& volume, const Partition partition, const FileInfo& directory,
@@ -141,7 +142,7 @@ void ExportDirectory(const Volume& volume, const Partition partition, const File
     {
       if (File::Exists(export_path))
         NOTICE_LOG(DISCIO, "%s already exists", export_path.c_str());
-      else if (!ExportFile(volume, partition, &file_info, export_path))
+      else if (!ExportFile(volume, partition, file_info, export_path))
         ERROR_LOG(DISCIO, "Could not export %s", export_path.c_str());
     }
     else if (recursive)

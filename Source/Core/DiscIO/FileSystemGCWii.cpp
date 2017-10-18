@@ -98,23 +98,23 @@ FileInfo FileSystemGCWii::GetRoot() const
   return FileInfo(this, 0);
 }
 
-std::unique_ptr<FileInfo> FileSystemGCWii::FindFileInfo(const std::string& path) const
+std::optional<FileInfo> FileSystemGCWii::FindFileInfo(const std::string& path) const
 {
   if (!IsValid())
-    return nullptr;
+    return std::nullopt;
 
   return FindFileInfo(path, GetRoot());
 }
 
-std::unique_ptr<FileInfo> FileSystemGCWii::FindFileInfo(const std::string& path,
-                                                        const FileInfo& file_info) const
+std::optional<FileInfo> FileSystemGCWii::FindFileInfo(const std::string& path,
+                                                      const FileInfo& file_info) const
 {
   // Given a path like "directory1/directory2/fileA.bin", this function will
   // find directory1 and then call itself to search for "directory2/fileA.bin".
 
   const size_t name_start = path.find_first_not_of('/');
   if (name_start == std::string::npos)
-    return std::make_unique<FileInfo>(file_info);  // We're done
+    return file_info;  // We're done
 
   const size_t name_end = path.find('/', name_start);
   const std::string name = path.substr(name_start, name_end - name_start);
@@ -125,7 +125,7 @@ std::unique_ptr<FileInfo> FileSystemGCWii::FindFileInfo(const std::string& path,
     if (!strcasecmp(child.GetName().c_str(), name.c_str()))
     {
       // A match is found. The rest of the path is passed on to finish the search.
-      std::unique_ptr<FileInfo> result = FindFileInfo(rest_of_path, child);
+      std::optional<FileInfo> result = FindFileInfo(rest_of_path, child);
 
       // If the search wasn't successful, the loop continues, just in case there's a second
       // file info that matches searching_for (which probably won't happen in practice)
@@ -134,13 +134,13 @@ std::unique_ptr<FileInfo> FileSystemGCWii::FindFileInfo(const std::string& path,
     }
   }
 
-  return nullptr;
+  return std::nullopt;
 }
 
-std::unique_ptr<FileInfo> FileSystemGCWii::FindFileInfo(u64 disc_offset) const
+std::optional<FileInfo> FileSystemGCWii::FindFileInfo(u64 disc_offset) const
 {
   if (!IsValid())
-    return nullptr;
+    return std::nullopt;
 
   // Build a cache (unless there already is one)
   if (m_offset_file_info_cache.empty())
@@ -159,14 +159,14 @@ std::unique_ptr<FileInfo> FileSystemGCWii::FindFileInfo(u64 disc_offset) const
   // Get the first file that ends after disc_offset
   const auto it = m_offset_file_info_cache.upper_bound(disc_offset);
   if (it == m_offset_file_info_cache.end())
-    return nullptr;
+    return std::nullopt;
 
   // If the file's start isn't after disc_offset, success
   u32 result_index = it->second;
   if (GetOffset(result_index) <= disc_offset)
-    return std::make_unique<FileInfo>(this, result_index);
+    return FileInfo(this, result_index);
 
-  return nullptr;
+  return std::nullopt;
 }
 
 u32 FileSystemGCWii::Get(u32 index, EntryProperty entry_property) const

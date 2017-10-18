@@ -70,9 +70,9 @@ public:
   // are only valid for as long as the file system object is valid.
   virtual FileInfo GetRoot() const = 0;
   // Returns nullptr if not found
-  virtual std::unique_ptr<FileInfo> FindFileInfo(const std::string& path) const = 0;
+  virtual std::optional<FileInfo> FindFileInfo(const std::string& path) const = 0;
   // Returns nullptr if not found
-  virtual std::unique_ptr<FileInfo> FindFileInfo(u64 disc_offset) const = 0;
+  virtual std::optional<FileInfo> FindFileInfo(u64 disc_offset) const = 0;
 
   virtual u64 GetOffset(u32 index) const = 0;
   virtual u32 GetSize(u32 index) const = 0;
