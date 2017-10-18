@@ -27,8 +27,7 @@ namespace DiscIO
 {
 constexpr u32 FST_ENTRY_SIZE = 4 * 3;  // An FST entry consists of three 32-bit integers
 
-FileSystemGCWii::FileSystemGCWii(const Volume* volume, const Partition& partition)
-    : m_valid(false), m_root(nullptr, 0)
+FileSystemGCWii::FileSystemGCWii(const Volume* volume, const Partition& partition) : m_valid(false)
 {
   // Check if this is a GameCube or Wii disc
   if (volume->ReadSwapped<u32>(0x18, partition) == u32(0x5D1C9EA3))
@@ -69,13 +68,12 @@ FileSystemGCWii::FileSystemGCWii(const Volume* volume, const Partition& partitio
   }
 
   // Create the root object
-  m_root = FileInfo(this, 0);
-  if (!m_root.IsDirectory())
+  if (!IsDirectory(0))
   {
     ERROR_LOG(DISCIO, "File system root is not a directory");
     return;
   }
-  m_total_file_infos = m_root.GetSize();
+  m_total_file_infos = GetSize(0);
 
   if (FST_ENTRY_SIZE * m_total_file_infos > *fst_size)
   {
@@ -95,9 +93,9 @@ FileSystemGCWii::FileSystemGCWii(const Volume* volume, const Partition& partitio
 
 FileSystemGCWii::~FileSystemGCWii() = default;
 
-const FileInfo& FileSystemGCWii::GetRoot() const
+FileInfo FileSystemGCWii::GetRoot() const
 {
-  return m_root;
+  return FileInfo(this, 0);
 }
 
 std::unique_ptr<FileInfo> FileSystemGCWii::FindFileInfo(const std::string& path) const
@@ -105,7 +103,7 @@ std::unique_ptr<FileInfo> FileSystemGCWii::FindFileInfo(const std::string& path)
   if (!IsValid())
     return nullptr;
 
-  return FindFileInfo(path, m_root);
+  return FindFileInfo(path, GetRoot());
 }
 
 std::unique_ptr<FileInfo> FileSystemGCWii::FindFileInfo(const std::string& path,
@@ -147,15 +145,13 @@ std::unique_ptr<FileInfo> FileSystemGCWii::FindFileInfo(u64 disc_offset) const
   // Build a cache (unless there already is one)
   if (m_offset_file_info_cache.empty())
   {
-    u32 fst_entries = m_root.GetSize();
-    for (u32 i = 0; i < fst_entries; i++)
+    for (u32 index = 0; index < m_total_file_infos; index++)
     {
-      FileInfo file_info(m_root, i);
-      if (!file_info.IsDirectory())
+      if (!IsDirectory(index))
       {
-        const u32 size = file_info.GetSize();
+        const u32 size = GetSize(index);
         if (size != 0)
-          m_offset_file_info_cache.emplace(file_info.GetOffset() + size, i);
+          m_offset_file_info_cache.emplace(GetOffset(index) + size, index);
       }
     }
   }
@@ -164,11 +160,11 @@ std::unique_ptr<FileInfo> FileSystemGCWii::FindFileInfo(u64 disc_offset) const
   const auto it = m_offset_file_info_cache.upper_bound(disc_offset);
   if (it == m_offset_file_info_cache.end())
     return nullptr;
-  std::unique_ptr<FileInfo> result(std::make_unique<FileInfo>(m_root, it->second));
 
   // If the file's start isn't after disc_offset, success
-  if (result->GetOffset() <= disc_offset)
-    return result;
+  u32 result_index = it->second;
+  if (GetOffset(result_index) <= disc_offset)
+    return std::make_unique<FileInfo>(this, result_index);
 
   return nullptr;
 }

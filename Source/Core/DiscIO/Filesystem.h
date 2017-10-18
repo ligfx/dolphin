@@ -68,7 +68,7 @@ public:
   virtual bool IsValid() const = 0;
   // The object returned by GetRoot and all objects created from it
   // are only valid for as long as the file system object is valid.
-  virtual const FileInfo& GetRoot() const = 0;
+  virtual FileInfo GetRoot() const = 0;
   // Returns nullptr if not found
   virtual std::unique_ptr<FileInfo> FindFileInfo(const std::string& path) const = 0;
   // Returns nullptr if not found

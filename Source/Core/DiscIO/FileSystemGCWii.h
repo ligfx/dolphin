@@ -26,7 +26,7 @@ public:
   ~FileSystemGCWii() override;
 
   bool IsValid() const override { return m_valid; }
-  const FileInfo& GetRoot() const override;
+  FileInfo GetRoot() const override;
   std::unique_ptr<FileInfo> FindFileInfo(const std::string& path) const override;
   std::unique_ptr<FileInfo> FindFileInfo(u64 disc_offset) const override;
 
@@ -69,7 +69,6 @@ private:
 
   bool m_valid;
   std::vector<u8> m_fst;
-  FileInfo m_root;
   u8 m_offset_shift;
   u32 m_total_file_infos;
   // Maps the end offset of files to FST indexes
