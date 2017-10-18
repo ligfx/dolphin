@@ -94,11 +94,11 @@ public:
 class FileInfoIterator final
 {
 public:
-  using iterator_category = std::forward_iterator_tag;
-  using value_type = const FileInfo;
+  using iterator_category = std::input_iterator_tag;
+  using value_type = FileInfo;
   using difference_type = std::ptrdiff_t;
-  using pointer = value_type*;
-  using reference = value_type&;
+  using pointer = const value_type*;
+  using reference = const value_type&;
 
   FileInfoIterator();
   FileInfoIterator(FileInfo file_info);
