@@ -449,7 +449,6 @@ void DirectoryBlobReader::SetWiiRegionData(const std::string& game_partition_roo
     ERROR_LOG(DISCIO, "Couldn't read age ratings from %s", region_bin_path.c_str());
 
   constexpr u64 WII_REGION_DATA_ADDRESS = 0x4E000;
-  constexpr u64 WII_REGION_DATA_SIZE = 0x20;
   m_nonpartition_contents.Add(WII_REGION_DATA_ADDRESS, m_wii_region_data);
 }
 
