@@ -185,18 +185,15 @@ void AudioConfigPane::BindEvents()
 
   m_dpl2_decoder_checkbox->Bind(wxEVT_CHECKBOX, &AudioConfigPane::OnDPL2DecoderCheckBoxChanged,
                                 this);
-  m_dpl2_decoder_checkbox->Bind(wxEVT_UPDATE_UI, &WxEventUtils::OnEnableIfCoreNotRunning);
 
   m_volume_slider->Bind(wxEVT_SLIDER, &AudioConfigPane::OnVolumeSliderChanged, this);
 
   m_audio_backend_choice->Bind(wxEVT_CHOICE, &AudioConfigPane::OnAudioBackendChanged, this);
-  m_audio_backend_choice->Bind(wxEVT_UPDATE_UI, &WxEventUtils::OnEnableIfCoreNotRunning);
 
   if (m_latency_control_supported)
   {
     m_audio_latency_spinctrl->Bind(wxEVT_SPINCTRL, &AudioConfigPane::OnLatencySpinCtrlChanged,
                                    this);
-    m_audio_latency_spinctrl->Bind(wxEVT_UPDATE_UI, &WxEventUtils::OnEnableIfCoreNotRunning);
   }
 
   m_stretch_checkbox->Bind(wxEVT_CHECKBOX, &AudioConfigPane::OnStretchCheckBoxChanged, this);
@@ -213,6 +210,7 @@ void AudioConfigPane::OnDSPEngineRadioBoxChanged(wxCommandEvent& event)
 void AudioConfigPane::OnDPL2DecoderCheckBoxChanged(wxCommandEvent&)
 {
   SConfig::GetInstance().bDPL2Decoder = m_dpl2_decoder_checkbox->IsChecked();
+  AudioCommon::UpdateSoundStream();
 }
 
 void AudioConfigPane::OnVolumeSliderChanged(wxCommandEvent& event)
@@ -235,6 +233,7 @@ void AudioConfigPane::OnAudioBackendChanged(wxCommandEvent& event)
 void AudioConfigPane::OnLatencySpinCtrlChanged(wxCommandEvent& event)
 {
   SConfig::GetInstance().iLatency = m_audio_latency_spinctrl->GetValue();
+  AudioCommon::UpdateSoundStream();
 }
 
 void AudioConfigPane::OnStretchCheckBoxChanged(wxCommandEvent& event)
