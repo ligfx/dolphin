@@ -28,6 +28,39 @@ namespace AudioCommon
 static const int AUDIO_VOLUME_MIN = 0;
 static const int AUDIO_VOLUME_MAX = 100;
 
+static std::unique_ptr<SoundStream> CreateSoundStream(const std::string& backend)
+{
+  std::unique_ptr<SoundStream> stream;
+
+  if (backend == BACKEND_CUBEB)
+    stream = std::make_unique<CubebStream>();
+  else if (backend == BACKEND_OPENAL && OpenALStream::isValid())
+    stream = std::make_unique<OpenALStream>();
+  else if (backend == BACKEND_NULLSOUND)
+    stream = std::make_unique<NullSound>();
+  else if (backend == BACKEND_XAUDIO2)
+  {
+    if (XAudio2::isValid())
+      stream = std::make_unique<XAudio2>();
+    else if (XAudio2_7::isValid())
+      stream = std::make_unique<XAudio2_7>();
+  }
+  else if (backend == BACKEND_ALSA && AlsaSound::isValid())
+    stream = std::make_unique<AlsaSound>();
+  else if (backend == BACKEND_PULSEAUDIO && PulseAudio::isValid())
+    stream = std::make_unique<PulseAudio>();
+  else if (backend == BACKEND_OPENSLES && OpenSLESStream::isValid())
+    stream = std::make_unique<OpenSLESStream>();
+
+  if (!stream || !stream->Init())
+  {
+    WARN_LOG(AUDIO, "Could not initialize backend %s, using %s instead.", backend.c_str(),
+             BACKEND_NULLSOUND);
+    stream = std::make_unique<NullSound>();
+  }
+  return stream;
+}
+
 Mixer* GetMixer()
 {
   return s_mixer.get();
@@ -37,34 +70,7 @@ void Init()
 {
   s_mixer = std::make_unique<Mixer>(48000);
 
-  std::string backend = SConfig::GetInstance().sBackend;
-  if (backend == BACKEND_CUBEB)
-    s_sound_stream = std::make_unique<CubebStream>();
-  else if (backend == BACKEND_OPENAL && OpenALStream::isValid())
-    s_sound_stream = std::make_unique<OpenALStream>();
-  else if (backend == BACKEND_NULLSOUND)
-    s_sound_stream = std::make_unique<NullSound>();
-  else if (backend == BACKEND_XAUDIO2)
-  {
-    if (XAudio2::isValid())
-      s_sound_stream = std::make_unique<XAudio2>();
-    else if (XAudio2_7::isValid())
-      s_sound_stream = std::make_unique<XAudio2_7>();
-  }
-  else if (backend == BACKEND_ALSA && AlsaSound::isValid())
-    s_sound_stream = std::make_unique<AlsaSound>();
-  else if (backend == BACKEND_PULSEAUDIO && PulseAudio::isValid())
-    s_sound_stream = std::make_unique<PulseAudio>();
-  else if (backend == BACKEND_OPENSLES && OpenSLESStream::isValid())
-    s_sound_stream = std::make_unique<OpenSLESStream>();
-
-  if (!s_sound_stream || !s_sound_stream->Init())
-  {
-    WARN_LOG(AUDIO, "Could not initialize backend %s, using %s instead.", backend.c_str(),
-             BACKEND_NULLSOUND);
-    s_sound_stream = std::make_unique<NullSound>();
-  }
-
+  s_sound_stream = CreateSoundStream(SConfig::GetInstance().sBackend);
   UpdateSoundStream();
   SetSoundStreamRunning(true);
 
