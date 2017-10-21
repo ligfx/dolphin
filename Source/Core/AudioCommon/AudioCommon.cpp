@@ -28,6 +28,16 @@ namespace AudioCommon
 static const int AUDIO_VOLUME_MIN = 0;
 static const int AUDIO_VOLUME_MAX = 100;
 
+template <class T>
+static bool UpdateIfChanged(T& last, const T& current)
+{
+  if (last == current)
+    return false;
+
+  last = current;
+  return true;
+}
+
 static std::unique_ptr<SoundStream> CreateSoundStream(const std::string& backend)
 {
   std::unique_ptr<SoundStream> stream;
@@ -67,6 +77,28 @@ static void DestroySoundStream()
   s_sound_stream.reset();
 }
 
+static void RecreateSoundStreamIfNeeded()
+{
+  if (!GetMixer())
+    return;
+
+  static std::string s_last_backend;
+  static bool s_last_dpl2_enabled;
+  static int s_last_latency;
+
+  const std::string& backend = SConfig::GetInstance().sBackend;
+  const bool backend_changed = UpdateIfChanged(s_last_backend, backend);
+  const bool dpl2_changed =
+      UpdateIfChanged(s_last_dpl2_enabled, SConfig::GetInstance().bDPL2Decoder);
+  const bool latency_changed = UpdateIfChanged(s_last_latency, SConfig::GetInstance().iLatency);
+
+  if (!s_sound_stream || backend_changed || dpl2_changed || latency_changed)
+  {
+    DestroySoundStream();
+    s_sound_stream = CreateSoundStream(backend);
+  }
+}
+
 Mixer* GetMixer()
 {
   return s_mixer.get();
@@ -76,7 +108,6 @@ void Init()
 {
   s_mixer = std::make_unique<Mixer>(48000);
 
-  s_sound_stream = CreateSoundStream(SConfig::GetInstance().sBackend);
   UpdateSoundStream();
   SetSoundStreamRunning(true);
 
@@ -160,21 +191,23 @@ bool SupportsVolumeChanges(const std::string& backend)
 
 void UpdateSoundStream()
 {
-  if (s_sound_stream)
-  {
-    int volume = SConfig::GetInstance().m_IsMuted ? 0 : SConfig::GetInstance().m_Volume;
-    s_sound_stream->SetVolume(volume);
-  }
+  if (!GetMixer())
+    return;
+
+  const bool old_sound_stream_running = s_sound_stream_running;
+  RecreateSoundStreamIfNeeded();
+  SetSoundStreamRunning(old_sound_stream_running);
+
+  int volume = SConfig::GetInstance().m_IsMuted ? 0 : SConfig::GetInstance().m_Volume;
+  s_sound_stream->SetVolume(volume);
 }
 
-void SetSoundStreamRunning(bool running)
+void SetSoundStreamRunning(const bool running)
 {
   if (!s_sound_stream)
     return;
-
-  if (s_sound_stream_running == running)
+  if (!UpdateIfChanged(s_sound_stream_running, running))
     return;
-  s_sound_stream_running = running;
 
   if (s_sound_stream->SetRunning(running))
     return;
