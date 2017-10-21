@@ -12,6 +12,7 @@
 #include <vector>
 
 #include "AudioCommon/AudioCommon.h"
+#include "AudioCommon/Mixer.h"
 
 #include "Common/Align.h"
 #include "Common/ChunkFile.h"
@@ -347,7 +348,7 @@ static void DTKStreamingCallback(const std::vector<u8>& audio_data, s64 cycles_l
   // Send audio to the mixer.
   std::vector<s16> temp_pcm(s_pending_samples * 2, 0);
   ProcessDTKSamples(&temp_pcm, audio_data);
-  g_sound_stream->GetMixer()->PushStreamingSamples(temp_pcm.data(), s_pending_samples);
+  AudioCommon::GetMixer()->PushStreamingSamples(temp_pcm.data(), s_pending_samples);
 
   // Determine which audio data to read next.
   static const int MAXIMUM_SAMPLES = 48000 / 2000 * 7;  // 3.5ms of 48kHz samples

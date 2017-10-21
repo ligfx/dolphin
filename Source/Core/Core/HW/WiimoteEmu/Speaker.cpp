@@ -5,6 +5,7 @@
 #include <memory>
 
 #include "AudioCommon/AudioCommon.h"
+#include "AudioCommon/Mixer.h"
 #include "Common/CommonTypes.h"
 #include "Common/Logging/Log.h"
 #include "Core/ConfigManager.h"
@@ -130,11 +131,10 @@ void Wiimote::SpeakerData(const wm_speaker_data* sd)
   if (right_volume > 255)
     right_volume = 255;
 
-  g_sound_stream->GetMixer()->SetWiimoteSpeakerVolume(left_volume, right_volume);
+  AudioCommon::GetMixer()->SetWiimoteSpeakerVolume(left_volume, right_volume);
 
   // ADPCM sample rate is thought to be x2.(3000 x2 = 6000).
-  g_sound_stream->GetMixer()->PushWiimoteSpeakerSamples(samples.get(), sample_length,
-                                                        sample_rate * 2);
+  AudioCommon::GetMixer()->PushWiimoteSpeakerSamples(samples.get(), sample_length, sample_rate * 2);
 
 #ifdef WIIMOTE_SPEAKER_DUMP
   static int num = 0;

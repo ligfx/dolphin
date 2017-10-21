@@ -17,8 +17,7 @@
 #include "Common/Logging/Log.h"
 #include "Core/ConfigManager.h"
 
-// This shouldn't be a global, at least not here.
-std::unique_ptr<SoundStream> g_sound_stream;
+static std::unique_ptr<SoundStream> s_sound_stream;
 
 static bool s_audio_dump_start = false;
 static bool s_sound_stream_running = false;
@@ -28,34 +27,41 @@ namespace AudioCommon
 static const int AUDIO_VOLUME_MIN = 0;
 static const int AUDIO_VOLUME_MAX = 100;
 
+Mixer* GetMixer()
+{
+  if (!s_sound_stream)
+    return nullptr;
+  return s_sound_stream->GetMixer();
+}
+
 void InitSoundStream()
 {
   std::string backend = SConfig::GetInstance().sBackend;
   if (backend == BACKEND_CUBEB)
-    g_sound_stream = std::make_unique<CubebStream>();
+    s_sound_stream = std::make_unique<CubebStream>();
   else if (backend == BACKEND_OPENAL && OpenALStream::isValid())
-    g_sound_stream = std::make_unique<OpenALStream>();
+    s_sound_stream = std::make_unique<OpenALStream>();
   else if (backend == BACKEND_NULLSOUND)
-    g_sound_stream = std::make_unique<NullSound>();
+    s_sound_stream = std::make_unique<NullSound>();
   else if (backend == BACKEND_XAUDIO2)
   {
     if (XAudio2::isValid())
-      g_sound_stream = std::make_unique<XAudio2>();
+      s_sound_stream = std::make_unique<XAudio2>();
     else if (XAudio2_7::isValid())
-      g_sound_stream = std::make_unique<XAudio2_7>();
+      s_sound_stream = std::make_unique<XAudio2_7>();
   }
   else if (backend == BACKEND_ALSA && AlsaSound::isValid())
-    g_sound_stream = std::make_unique<AlsaSound>();
+    s_sound_stream = std::make_unique<AlsaSound>();
   else if (backend == BACKEND_PULSEAUDIO && PulseAudio::isValid())
-    g_sound_stream = std::make_unique<PulseAudio>();
+    s_sound_stream = std::make_unique<PulseAudio>();
   else if (backend == BACKEND_OPENSLES && OpenSLESStream::isValid())
-    g_sound_stream = std::make_unique<OpenSLESStream>();
+    s_sound_stream = std::make_unique<OpenSLESStream>();
 
-  if (!g_sound_stream || !g_sound_stream->Init())
+  if (!s_sound_stream || !s_sound_stream->Init())
   {
     WARN_LOG(AUDIO, "Could not initialize backend %s, using %s instead.", backend.c_str(),
              BACKEND_NULLSOUND);
-    g_sound_stream = std::make_unique<NullSound>();
+    s_sound_stream = std::make_unique<NullSound>();
   }
 
   UpdateSoundStream();
@@ -73,7 +79,7 @@ void ShutdownSoundStream()
     StopAudioDump();
 
   SetSoundStreamRunning(false);
-  g_sound_stream.reset();
+  s_sound_stream.reset();
 
   INFO_LOG(AUDIO, "Done shutting down sound stream");
 }
@@ -141,23 +147,23 @@ bool SupportsVolumeChanges(const std::string& backend)
 
 void UpdateSoundStream()
 {
-  if (g_sound_stream)
+  if (s_sound_stream)
   {
     int volume = SConfig::GetInstance().m_IsMuted ? 0 : SConfig::GetInstance().m_Volume;
-    g_sound_stream->SetVolume(volume);
+    s_sound_stream->SetVolume(volume);
   }
 }
 
 void SetSoundStreamRunning(bool running)
 {
-  if (!g_sound_stream)
+  if (!s_sound_stream)
     return;
 
   if (s_sound_stream_running == running)
     return;
   s_sound_stream_running = running;
 
-  if (g_sound_stream->SetRunning(running))
+  if (s_sound_stream->SetRunning(running))
     return;
   if (running)
     ERROR_LOG(AUDIO, "Error starting stream.");
@@ -167,7 +173,7 @@ void SetSoundStreamRunning(bool running)
 
 void SendAIBuffer(const short* samples, unsigned int num_samples)
 {
-  if (!g_sound_stream)
+  if (!s_sound_stream)
     return;
 
   if (SConfig::GetInstance().m_DumpAudio && !s_audio_dump_start)
@@ -175,14 +181,12 @@ void SendAIBuffer(const short* samples, unsigned int num_samples)
   else if (!SConfig::GetInstance().m_DumpAudio && s_audio_dump_start)
     StopAudioDump();
 
-  Mixer* pMixer = g_sound_stream->GetMixer();
+  Mixer* mixer = GetMixer();
 
-  if (pMixer && samples)
-  {
-    pMixer->PushSamples(samples, num_samples);
-  }
+  if (mixer && samples)
+    mixer->PushSamples(samples, num_samples);
 
-  g_sound_stream->Update();
+  s_sound_stream->Update();
 }
 
 void StartAudioDump()
@@ -191,17 +195,19 @@ void StartAudioDump()
   std::string audio_file_name_dsp = File::GetUserPath(D_DUMPAUDIO_IDX) + "dspdump.wav";
   File::CreateFullPath(audio_file_name_dtk);
   File::CreateFullPath(audio_file_name_dsp);
-  g_sound_stream->GetMixer()->StartLogDTKAudio(audio_file_name_dtk);
-  g_sound_stream->GetMixer()->StartLogDSPAudio(audio_file_name_dsp);
+  GetMixer()->StartLogDTKAudio(audio_file_name_dtk);
+  GetMixer()->StartLogDSPAudio(audio_file_name_dsp);
   s_audio_dump_start = true;
 }
 
 void StopAudioDump()
 {
-  if (!g_sound_stream)
+  Mixer* mixer = GetMixer();
+  if (!mixer)
     return;
-  g_sound_stream->GetMixer()->StopLogDTKAudio();
-  g_sound_stream->GetMixer()->StopLogDSPAudio();
+
+  mixer->StopLogDTKAudio();
+  mixer->StopLogDSPAudio();
   s_audio_dump_start = false;
 }
 
