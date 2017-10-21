@@ -247,14 +247,6 @@ void AudioPane::OnEmulationStateChanged(bool running)
   m_dsp_hle->setEnabled(!running);
   m_dsp_lle->setEnabled(!running);
   m_dsp_interpreter->setEnabled(!running);
-  m_dolby_pro_logic->setEnabled(!running);
-  m_backend_label->setEnabled(!running);
-  m_backend_combo->setEnabled(!running);
-  if (m_latency_control_supported)
-  {
-    m_latency_label->setEnabled(!running);
-    m_latency_spin->setEnabled(!running);
-  }
 }
 
 void AudioPane::OnVolumeChanged(int volume)
