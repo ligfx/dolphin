@@ -173,7 +173,8 @@ bool XAudio2_7::Init()
 
   // XAudio2 master voice
   // XAUDIO2_DEFAULT_CHANNELS instead of 2 for expansion?
-  if (FAILED(hr = m_xaudio2->CreateMasteringVoice(&m_mastering_voice, 2, m_mixer->GetSampleRate())))
+  if (FAILED(hr = m_xaudio2->CreateMasteringVoice(&m_mastering_voice, 2,
+                                                  AudioCommon::GetMixer()->GetSampleRate())))
   {
     PanicAlert("XAudio2_7 master voice creation failed: %#X", hr);
     Stop();
@@ -184,7 +185,7 @@ bool XAudio2_7::Init()
   m_mastering_voice->SetVolume(m_volume);
 
   m_voice_context = std::unique_ptr<StreamingVoiceContext2_7>(
-      new StreamingVoiceContext2_7(m_xaudio2.get(), m_mixer.get(), m_sound_sync_event));
+      new StreamingVoiceContext2_7(m_xaudio2.get(), AudioCommon::GetMixer(), m_sound_sync_event));
 
   return true;
 }

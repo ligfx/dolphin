@@ -17,6 +17,7 @@
 #include "Common/Logging/Log.h"
 #include "Core/ConfigManager.h"
 
+static std::unique_ptr<Mixer> s_mixer;
 static std::unique_ptr<SoundStream> s_sound_stream;
 
 static bool s_audio_dump_start = false;
@@ -29,13 +30,13 @@ static const int AUDIO_VOLUME_MAX = 100;
 
 Mixer* GetMixer()
 {
-  if (!s_sound_stream)
-    return nullptr;
-  return s_sound_stream->GetMixer();
+  return s_mixer.get();
 }
 
 void InitSoundStream()
 {
+  s_mixer = std::make_unique<Mixer>(48000);
+
   std::string backend = SConfig::GetInstance().sBackend;
   if (backend == BACKEND_CUBEB)
     s_sound_stream = std::make_unique<CubebStream>();
@@ -80,6 +81,8 @@ void ShutdownSoundStream()
 
   SetSoundStreamRunning(false);
   s_sound_stream.reset();
+
+  s_mixer.reset();
 
   INFO_LOG(AUDIO, "Done shutting down sound stream");
 }

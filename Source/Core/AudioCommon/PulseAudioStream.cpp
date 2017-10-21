@@ -4,6 +4,7 @@
 
 #include <cstring>
 
+#include "AudioCommon/AudioCommon.h"
 #include "AudioCommon/PulseAudioStream.h"
 #include "Common/CommonTypes.h"
 #include "Common/Logging/Log.h"
@@ -104,7 +105,7 @@ bool PulseAudio::PulseInit()
     channel_map.map[4] = PA_CHANNEL_POSITION_REAR_RIGHT;
   }
   ss.channels = m_channels;
-  ss.rate = m_mixer->GetSampleRate();
+  ss.rate = AudioCommon::GetMixer()->GetSampleRate();
   assert(pa_sample_spec_valid(&ss));
   m_pa_s = pa_stream_new(m_pa_ctx, "Playback", &ss, channel_map_p);
   pa_stream_set_write_callback(m_pa_s, WriteCallback, this);
@@ -181,14 +182,14 @@ void PulseAudio::WriteCallback(pa_stream* s, size_t length)
   if (m_stereo)
   {
     // use the raw s16 stereo mix
-    m_mixer->Mix((s16*)buffer, frames);
+    AudioCommon::GetMixer()->Mix((s16*)buffer, frames);
   }
   else
   {
     if (m_channels == 5)  // Extract dpl2/5.0 Surround
     {
       float floatbuffer_6chan[frames * 6];
-      m_mixer->MixSurround(floatbuffer_6chan, frames);
+      AudioCommon::GetMixer()->MixSurround(floatbuffer_6chan, frames);
 
       // DPL2Decode output: LEFTFRONT, RIGHTFRONT, CENTREFRONT, (sub), LEFTREAR, RIGHTREAR
       // Discard the subwoofer channel - DPL2Decode generates a pretty
