@@ -61,6 +61,12 @@ static std::unique_ptr<SoundStream> CreateSoundStream(const std::string& backend
   return stream;
 }
 
+static void DestroySoundStream()
+{
+  SetSoundStreamRunning(false);
+  s_sound_stream.reset();
+}
+
 Mixer* GetMixer()
 {
   return s_mixer.get();
@@ -85,9 +91,7 @@ void Shutdown()
   if (SConfig::GetInstance().m_DumpAudio && s_audio_dump_start)
     StopAudioDump();
 
-  SetSoundStreamRunning(false);
-  s_sound_stream.reset();
-
+  DestroySoundStream();
   s_mixer.reset();
 
   INFO_LOG(AUDIO, "Done shutting down sound stream");
