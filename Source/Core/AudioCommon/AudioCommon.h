@@ -13,8 +13,8 @@ class Mixer;
 namespace AudioCommon
 {
 Mixer* GetMixer();
-void InitSoundStream();
-void ShutdownSoundStream();
+void Init();
+void Shutdown();
 std::string GetDefaultSoundBackend();
 std::vector<std::string> GetSoundBackends();
 bool SupportsDPL2Decoder(const std::string& backend);

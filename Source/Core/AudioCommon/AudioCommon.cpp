@@ -33,7 +33,7 @@ Mixer* GetMixer()
   return s_mixer.get();
 }
 
-void InitSoundStream()
+void Init()
 {
   s_mixer = std::make_unique<Mixer>(48000);
 
@@ -72,7 +72,7 @@ void InitSoundStream()
     StartAudioDump();
 }
 
-void ShutdownSoundStream()
+void Shutdown()
 {
   INFO_LOG(AUDIO, "Shutting down sound stream");
 
