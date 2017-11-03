@@ -18,7 +18,6 @@ class MappingButton : public ElidedButton
 public:
   MappingButton(MappingWidget* widget, ControlReference* ref);
 
-  void Clear();
   void Update();
 
 signals:
@@ -27,6 +26,7 @@ signals:
 private:
   void mouseReleaseEvent(QMouseEvent* event) override;
 
+  void Clear();
   void OnButtonPressed();
   void OnButtonTimeout();
   void Connect();

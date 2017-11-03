@@ -24,13 +24,6 @@ void MappingNumeric::Connect()
           });
 }
 
-void MappingNumeric::Clear()
-{
-  m_setting->SetValue(m_setting->m_low + (m_setting->m_low + m_setting->m_high) / 2);
-  m_parent->SaveSettings();
-  Update();
-}
-
 void MappingNumeric::Update()
 {
   setValue(m_setting->m_low + m_setting->GetValue() * m_range);

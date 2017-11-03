@@ -18,6 +18,7 @@ class EmulatedControllerModel : public QObject
 {
   Q_OBJECT
 public:
+  void Clear();
   int GetPort() const;
   std::shared_ptr<ciface::Core::Device> GetDevice() const;
   ControllerEmu::EmulatedController* GetController() const;
@@ -27,5 +28,4 @@ public:
 
 signals:
   void Update();
-  void ClearFields();
 };

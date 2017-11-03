@@ -125,7 +125,7 @@ void MappingWindow::ConnectWidgets()
   connect(m_devices_refresh, &QPushButton::clicked, this, &MappingWindow::RefreshDevices);
   connect(m_devices_combo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
           this, &MappingWindow::OnDeviceChanged);
-  connect(m_reset_clear, &QPushButton::clicked, &m_model, &EmulatedControllerModel::ClearFields);
+  connect(m_reset_clear, &QPushButton::clicked, &m_model, &EmulatedControllerModel::Clear);
   connect(m_reset_default, &QPushButton::clicked, this, &MappingWindow::OnDefaultFieldsPressed);
   connect(m_profiles_save, &QPushButton::clicked, this, &MappingWindow::OnSaveProfilePressed);
   connect(m_profiles_load, &QPushButton::clicked, this, &MappingWindow::OnLoadProfilePressed);

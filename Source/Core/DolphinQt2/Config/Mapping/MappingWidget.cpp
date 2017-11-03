@@ -21,7 +21,6 @@
 
 MappingWidget::MappingWidget(EmulatedControllerModel* model) : m_model(model)
 {
-  connect(model, &EmulatedControllerModel::ClearFields, this, &MappingWidget::OnClearFields);
   connect(model, &EmulatedControllerModel::Update, this, &MappingWidget::Update);
 }
 
@@ -85,18 +84,6 @@ QGroupBox* MappingWidget::CreateGroupBox(const QString& name, ControllerEmu::Con
   }
 
   return group_box;
-}
-
-void MappingWidget::OnClearFields()
-{
-  for (auto* button : m_buttons)
-    button->Clear();
-
-  for (auto* spinbox : m_numerics)
-    spinbox->Clear();
-
-  for (auto* checkbox : m_bools)
-    checkbox->Clear();
 }
 
 void MappingWidget::Update()
