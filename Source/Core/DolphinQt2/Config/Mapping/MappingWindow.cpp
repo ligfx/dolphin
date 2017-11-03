@@ -270,13 +270,11 @@ void MappingWindow::SetMappingType(MappingWindow::Type type)
 
   widget->LoadSettings();
 
-  m_config = widget->GetConfig();
-
-  m_model.m_controller = m_config->GetController(m_model.GetPort());
+  m_model.SetConfig(widget->GetConfig());
   m_profiles_combo->addItem(QStringLiteral(""));
 
   const std::string profiles_path =
-      File::GetUserPath(D_CONFIG_IDX) + "Profiles/" + m_config->GetProfileName();
+      File::GetUserPath(D_CONFIG_IDX) + "Profiles/" + m_model.GetConfig()->GetProfileName();
   for (const auto& filename : Common::DoFileSearch({profiles_path}, {".ini"}))
   {
     std::string basename;

@@ -9,6 +9,8 @@
 
 #include "InputCommon/ControllerInterface/Device.h"
 
+class InputConfig;
+
 namespace ControllerEmu
 {
 class EmulatedController;
@@ -27,10 +29,15 @@ public:
   void SetDevice(const std::string& device);
   std::shared_ptr<ciface::Core::Device> GetDevice() const;
   ControllerEmu::EmulatedController* GetController() const;
+  InputConfig* GetConfig() const;
+  void SetConfig(InputConfig* config);
 
   ControllerEmu::EmulatedController* m_controller = nullptr;
   int m_port = -1;
 
 signals:
   void Update();
+
+private:
+  InputConfig* m_config = nullptr;
 };

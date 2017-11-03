@@ -9,6 +9,7 @@
 #include "InputCommon/ControllerEmu/Setting/BooleanSetting.h"
 #include "InputCommon/ControllerEmu/Setting/NumericSetting.h"
 #include "InputCommon/ControllerInterface/ControllerInterface.h"
+#include "InputCommon/InputConfig.h"
 
 void EmulatedControllerModel::OnDevicesChanged()
 {
@@ -84,4 +85,15 @@ ControllerEmu::EmulatedController* EmulatedControllerModel::GetController() cons
 std::shared_ptr<ciface::Core::Device> EmulatedControllerModel::GetDevice() const
 {
   return g_controller_interface.FindDevice(GetController()->GetDefaultDevice());
+}
+
+InputConfig* EmulatedControllerModel::GetConfig() const
+{
+  return m_config;
+}
+
+void EmulatedControllerModel::SetConfig(InputConfig* config)
+{
+  m_config = config;
+  m_controller = m_config->GetController(m_port);
 }

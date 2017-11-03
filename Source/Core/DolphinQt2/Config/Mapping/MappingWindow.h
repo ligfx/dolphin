@@ -87,6 +87,4 @@ private:
   QPushButton* m_reset_clear;
 
   QTabWidget* m_tab_widget;
-
-  InputConfig* m_config;
 };
