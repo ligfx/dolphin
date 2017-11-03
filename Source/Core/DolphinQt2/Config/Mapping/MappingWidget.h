@@ -56,8 +56,6 @@ protected:
   QGroupBox* CreateGroupBox(const QString& name, ControllerEmu::ControlGroup* group);
 
 private:
-  void OnClearFields();
-
   EmulatedControllerModel* m_model;
   bool m_first = true;
   std::vector<MappingBool*> m_bools;
