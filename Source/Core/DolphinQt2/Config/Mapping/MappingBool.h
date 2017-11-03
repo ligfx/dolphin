@@ -6,7 +6,7 @@
 
 #include <QCheckBox>
 
-class MappingWidget;
+class EmulatedControllerModel;
 
 namespace ControllerEmu
 {
@@ -16,7 +16,7 @@ class BooleanSetting;
 class MappingBool : public QCheckBox
 {
 public:
-  MappingBool(MappingWidget* widget, ControllerEmu::BooleanSetting* setting);
+  MappingBool(EmulatedControllerModel* model, ControllerEmu::BooleanSetting* setting);
 
   void Clear();
   void Update();
@@ -24,6 +24,6 @@ public:
 private:
   void Connect();
 
-  MappingWidget* m_parent;
+  EmulatedControllerModel* m_model;
   ControllerEmu::BooleanSetting* m_setting;
 };

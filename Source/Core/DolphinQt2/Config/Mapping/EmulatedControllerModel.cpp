@@ -97,3 +97,8 @@ void EmulatedControllerModel::SetConfig(InputConfig* config)
   m_config = config;
   m_controller = m_config->GetController(m_port);
 }
+
+void EmulatedControllerModel::SaveSettings()
+{
+  GetConfig()->SaveConfig();
+}

@@ -31,6 +31,7 @@ public:
   ControllerEmu::EmulatedController* GetController() const;
   InputConfig* GetConfig() const;
   void SetConfig(InputConfig* config);
+  void SaveSettings();
 
   ControllerEmu::EmulatedController* m_controller = nullptr;
   int m_port = -1;

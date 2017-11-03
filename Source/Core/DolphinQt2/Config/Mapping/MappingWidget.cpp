@@ -49,13 +49,12 @@ QGroupBox* MappingWidget::CreateGroupBox(const QString& name, ControllerEmu::Con
 
   for (auto& control : group->controls)
   {
-    auto* button = new MappingButton(this, control->control_ref.get());
+    auto* control_ref = control->control_ref.get();
+    auto* button = new MappingButton(m_model, control_ref);
 
     button->setMinimumWidth(100);
     button->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
     form_layout->addRow(QString::fromStdString(control->name), button);
-
-    auto* control_ref = control->control_ref.get();
 
     connect(button, &MappingButton::AdvancedPressed, [this, button, control_ref] {
       IOWindow io(this, m_model->GetController(), control_ref,
@@ -70,7 +69,7 @@ QGroupBox* MappingWidget::CreateGroupBox(const QString& name, ControllerEmu::Con
 
   for (auto& numeric : group->numeric_settings)
   {
-    auto* spinbox = new MappingNumeric(this, numeric.get());
+    auto* spinbox = new MappingNumeric(m_model, numeric.get());
     spinbox->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
     form_layout->addRow(QString::fromStdString(numeric->m_name), spinbox);
     m_numerics.push_back(spinbox);
@@ -78,7 +77,7 @@ QGroupBox* MappingWidget::CreateGroupBox(const QString& name, ControllerEmu::Con
 
   for (auto& boolean : group->boolean_settings)
   {
-    auto* checkbox = new MappingBool(this, boolean.get());
+    auto* checkbox = new MappingBool(m_model, boolean.get());
     checkbox->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
     form_layout->addRow(checkbox);
     m_bools.push_back(checkbox);

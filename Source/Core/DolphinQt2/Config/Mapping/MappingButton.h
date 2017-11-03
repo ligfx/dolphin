@@ -4,19 +4,17 @@
 
 #pragma once
 
-#include "Common/Flag.h"
 #include "DolphinQt2/QtUtils/ElidedButton.h"
 
 class ControlReference;
-class MappingWidget;
-class QEvent;
+class EmulatedControllerModel;
 class QMouseEvent;
 
 class MappingButton : public ElidedButton
 {
   Q_OBJECT
 public:
-  MappingButton(MappingWidget* widget, ControlReference* ref);
+  MappingButton(EmulatedControllerModel* model, ControlReference* ref);
 
   void Update();
 
@@ -31,6 +29,6 @@ private:
   void OnButtonTimeout();
   void Connect();
 
-  MappingWidget* m_parent;
+  EmulatedControllerModel* m_model;
   ControlReference* m_reference;
 };

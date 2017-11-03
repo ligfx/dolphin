@@ -5,9 +5,8 @@
 #pragma once
 
 #include <QSpinBox>
-#include <QString>
 
-class MappingWidget;
+class EmulatedControllerModel;
 
 namespace ControllerEmu
 {
@@ -17,7 +16,7 @@ class NumericSetting;
 class MappingNumeric : public QSpinBox
 {
 public:
-  MappingNumeric(MappingWidget* widget, ControllerEmu::NumericSetting* ref);
+  MappingNumeric(EmulatedControllerModel* model, ControllerEmu::NumericSetting* ref);
 
   void Clear();
   void Update();
@@ -25,7 +24,7 @@ public:
 private:
   void Connect();
 
-  MappingWidget* m_parent;
+  EmulatedControllerModel* m_model;
   ControllerEmu::NumericSetting* m_setting;
   double m_range;
 };
