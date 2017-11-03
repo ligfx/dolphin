@@ -88,6 +88,5 @@ private:
 
   QTabWidget* m_tab_widget;
 
-  Type m_mapping_type;
   InputConfig* m_config;
 };
