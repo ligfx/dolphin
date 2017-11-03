@@ -18,8 +18,13 @@ class EmulatedControllerModel : public QObject
 {
   Q_OBJECT
 public:
+  void OnDevicesChanged();
+  void SaveProfile(const std::string& profile_path);
+  void LoadProfile(const std::string& profile_path);
+  void LoadDefaults();
   void Clear();
   int GetPort() const;
+  void SetDevice(const std::string& device);
   std::shared_ptr<ciface::Core::Device> GetDevice() const;
   ControllerEmu::EmulatedController* GetController() const;
 

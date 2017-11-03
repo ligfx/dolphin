@@ -15,7 +15,6 @@
 
 #include "Common/FileSearch.h"
 #include "Common/FileUtil.h"
-#include "Common/IniFile.h"
 #include "Common/StringUtil.h"
 #include "Core/Core.h"
 #include "DolphinQt2/Config/Mapping/GCKeyboardEmu.h"
@@ -126,7 +125,7 @@ void MappingWindow::ConnectWidgets()
   connect(m_devices_combo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
           this, &MappingWindow::OnDeviceChanged);
   connect(m_reset_clear, &QPushButton::clicked, &m_model, &EmulatedControllerModel::Clear);
-  connect(m_reset_default, &QPushButton::clicked, this, &MappingWindow::OnDefaultFieldsPressed);
+  connect(m_reset_default, &QPushButton::clicked, &m_model, &EmulatedControllerModel::LoadDefaults);
   connect(m_profiles_save, &QPushButton::clicked, this, &MappingWindow::OnSaveProfilePressed);
   connect(m_profiles_load, &QPushButton::clicked, this, &MappingWindow::OnLoadProfilePressed);
   connect(m_profiles_delete, &QPushButton::clicked, this, &MappingWindow::OnDeleteProfilePressed);
@@ -175,14 +174,7 @@ void MappingWindow::OnLoadProfilePressed()
   if (m_profiles_combo->currentIndex() == 0)
     return;
 
-  IniFile ini;
-  ini.Load(profile_path.toStdString());
-
-  m_model.m_controller->LoadConfig(ini.GetOrCreateSection("Profile"));
-  m_model.m_controller->UpdateReferences(g_controller_interface);
-
-  emit m_model.Update();
-
+  m_model.LoadProfile(profile_path.toStdString());
   RefreshDevices();
 }
 
@@ -194,12 +186,7 @@ void MappingWindow::OnSaveProfilePressed()
   if (profile_name.isEmpty())
     return;
 
-  File::CreateFullPath(profile_path.toStdString());
-
-  IniFile ini;
-
-  m_model.m_controller->SaveConfig(ini.GetOrCreateSection("Profile"));
-  ini.Save(profile_path.toStdString());
+  m_model.SaveProfile(profile_path.toStdString());
 
   if (m_profiles_combo->currentIndex() == 0)
   {
@@ -210,8 +197,7 @@ void MappingWindow::OnSaveProfilePressed()
 
 void MappingWindow::OnDeviceChanged(int index)
 {
-  const auto device = m_devices_combo->currentText().toStdString();
-  m_model.m_controller->SetDefaultDevice(device);
+  m_model.SetDevice(m_devices_combo->currentText().toStdString());
 }
 
 void MappingWindow::RefreshDevices()
@@ -220,7 +206,7 @@ void MappingWindow::RefreshDevices()
 
   Core::RunAsCPUThread([&] {
     g_controller_interface.RefreshDevices();
-    m_model.m_controller->UpdateReferences(g_controller_interface);
+    m_model.OnDevicesChanged();
 
     const auto default_device = m_model.m_controller->GetDefaultDevice().ToString();
 
@@ -304,11 +290,4 @@ void MappingWindow::SetMappingType(MappingWindow::Type type)
 void MappingWindow::AddWidget(const QString& name, QWidget* widget)
 {
   m_tab_widget->addTab(widget, name);
-}
-
-void MappingWindow::OnDefaultFieldsPressed()
-{
-  m_model.m_controller->LoadDefaults(g_controller_interface);
-  m_model.m_controller->UpdateReferences(g_controller_interface);
-  emit m_model.Update();
 }

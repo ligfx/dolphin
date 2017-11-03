@@ -1,5 +1,7 @@
 #include "DolphinQt2/Config/Mapping/EmulatedControllerModel.h"
 
+#include "Common/FileUtil.h"
+#include "Common/IniFile.h"
 #include "InputCommon/ControlReference/ControlReference.h"
 #include "InputCommon/ControllerEmu/Control/Control.h"
 #include "InputCommon/ControllerEmu/ControlGroup/ControlGroup.h"
@@ -7,6 +9,46 @@
 #include "InputCommon/ControllerEmu/Setting/BooleanSetting.h"
 #include "InputCommon/ControllerEmu/Setting/NumericSetting.h"
 #include "InputCommon/ControllerInterface/ControllerInterface.h"
+
+void EmulatedControllerModel::OnDevicesChanged()
+{
+  m_controller->UpdateReferences(g_controller_interface);
+}
+
+void EmulatedControllerModel::SaveProfile(const std::string& profile_path)
+{
+  File::CreateFullPath(profile_path);
+
+  IniFile ini;
+  m_controller->SaveConfig(ini.GetOrCreateSection("Profile"));
+  ini.Save(profile_path);
+}
+
+void EmulatedControllerModel::LoadProfile(const std::string& profile_path)
+{
+  IniFile ini;
+  ini.Load(profile_path);
+
+  m_controller->LoadConfig(ini.GetOrCreateSection("Profile"));
+  m_controller->UpdateReferences(g_controller_interface);
+
+  emit Update();
+}
+
+void EmulatedControllerModel::LoadDefaults()
+{
+  if (m_controller == nullptr)
+    return;
+
+  m_controller->LoadDefaults(g_controller_interface);
+  m_controller->UpdateReferences(g_controller_interface);
+  emit Update();
+}
+
+void EmulatedControllerModel::SetDevice(const std::string& device)
+{
+  m_controller->SetDefaultDevice(device);
+}
 
 void EmulatedControllerModel::Clear()
 {

@@ -57,7 +57,6 @@ private:
   void OnDeleteProfilePressed();
   void OnLoadProfilePressed();
   void OnSaveProfilePressed();
-  void OnDefaultFieldsPressed();
   void OnDeviceChanged(int index);
 
   EmulatedControllerModel m_model;
