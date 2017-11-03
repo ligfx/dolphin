@@ -43,7 +43,6 @@ public:
   explicit MappingWidget(EmulatedControllerModel* model);
 
   ControllerEmu::EmulatedController* GetController() const;
-  std::shared_ptr<ciface::Core::Device> GetDevice() const;
 
   virtual void LoadSettings() = 0;
   void SaveSettings();

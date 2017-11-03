@@ -40,7 +40,7 @@ void MappingButton::Connect()
 
 void MappingButton::OnButtonPressed()
 {
-  if (m_parent->GetDevice() == nullptr || !m_reference->IsInput())
+  if (m_parent->GetModel()->GetDevice() == nullptr || !m_reference->IsInput())
     return;
 
   installEventFilter(BlockUserInputFilter::Instance());
@@ -49,7 +49,7 @@ void MappingButton::OnButtonPressed()
 
   // Make sure that we don't block event handling
   std::thread([this] {
-    const auto dev = m_parent->GetDevice();
+    const auto dev = m_parent->GetModel()->GetDevice();
 
     setText(QStringLiteral("..."));
 

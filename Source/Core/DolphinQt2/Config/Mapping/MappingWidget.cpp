@@ -35,11 +35,6 @@ EmulatedControllerModel* MappingWidget::GetModel() const
   return m_model;
 }
 
-std::shared_ptr<ciface::Core::Device> MappingWidget::GetDevice() const
-{
-  return m_model->GetDevice();
-}
-
 int MappingWidget::GetPort() const
 {
   return m_model->GetPort();
