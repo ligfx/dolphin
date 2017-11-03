@@ -35,8 +35,3 @@ void Hotkey3D::LoadSettings()
 {
   HotkeyManagerEmu::LoadConfig();
 }
-
-void Hotkey3D::SaveSettings()
-{
-  HotkeyManagerEmu::GetConfig()->SaveConfig();
-}

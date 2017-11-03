@@ -35,8 +35,3 @@ void HotkeyTAS::LoadSettings()
 {
   HotkeyManagerEmu::LoadConfig();
 }
-
-void HotkeyTAS::SaveSettings()
-{
-  HotkeyManagerEmu::GetConfig()->SaveConfig();
-}

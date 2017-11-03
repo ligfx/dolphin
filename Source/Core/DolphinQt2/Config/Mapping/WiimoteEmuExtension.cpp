@@ -172,11 +172,6 @@ void WiimoteEmuExtension::LoadSettings()
   Wiimote::LoadConfig();
 }
 
-void WiimoteEmuExtension::SaveSettings()
-{
-  Wiimote::GetConfig()->SaveConfig();
-}
-
 InputConfig* WiimoteEmuExtension::GetConfig()
 {
   return Wiimote::GetConfig();

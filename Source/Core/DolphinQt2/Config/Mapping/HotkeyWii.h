@@ -17,7 +17,6 @@ public:
 
 private:
   void LoadSettings() override;
-  void SaveSettings() override;
   void CreateMainLayout();
 
   // Main

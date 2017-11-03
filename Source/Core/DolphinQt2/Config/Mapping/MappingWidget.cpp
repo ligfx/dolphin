@@ -18,10 +18,16 @@
 #include "InputCommon/ControllerEmu/ControlGroup/ControlGroup.h"
 #include "InputCommon/ControllerEmu/Setting/BooleanSetting.h"
 #include "InputCommon/ControllerEmu/Setting/NumericSetting.h"
+#include "InputCommon/InputConfig.h"
 
 MappingWidget::MappingWidget(EmulatedControllerModel* model) : m_model(model)
 {
   connect(model, &EmulatedControllerModel::Update, this, &MappingWidget::Update);
+}
+
+void MappingWidget::SaveSettings()
+{
+  GetConfig()->SaveConfig();
 }
 
 EmulatedControllerModel* MappingWidget::GetModel() const

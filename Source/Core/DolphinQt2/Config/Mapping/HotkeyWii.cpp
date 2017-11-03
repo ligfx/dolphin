@@ -32,8 +32,3 @@ void HotkeyWii::LoadSettings()
 {
   HotkeyManagerEmu::LoadConfig();
 }
-
-void HotkeyWii::SaveSettings()
-{
-  HotkeyManagerEmu::GetConfig()->SaveConfig();
-}

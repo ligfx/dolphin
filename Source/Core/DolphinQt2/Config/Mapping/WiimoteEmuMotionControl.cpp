@@ -40,11 +40,6 @@ void WiimoteEmuMotionControl::LoadSettings()
   Wiimote::LoadConfig();
 }
 
-void WiimoteEmuMotionControl::SaveSettings()
-{
-  Wiimote::GetConfig()->SaveConfig();
-}
-
 InputConfig* WiimoteEmuMotionControl::GetConfig()
 {
   return Wiimote::GetConfig();

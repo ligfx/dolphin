@@ -45,11 +45,6 @@ void GCPadEmu::LoadSettings()
   Pad::LoadConfig();
 }
 
-void GCPadEmu::SaveSettings()
-{
-  Pad::GetConfig()->SaveConfig();
-}
-
 InputConfig* GCPadEmu::GetConfig()
 {
   return Pad::GetConfig();

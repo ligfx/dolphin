@@ -18,7 +18,6 @@ public:
 
 private:
   void LoadSettings() override;
-  void SaveSettings() override;
   void CreateMainLayout();
   void Connect();
   void OnAttachmentChanged(int index);

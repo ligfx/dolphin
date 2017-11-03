@@ -40,8 +40,3 @@ void HotkeyGeneral::LoadSettings()
 {
   HotkeyManagerEmu::LoadConfig();
 }
-
-void HotkeyGeneral::SaveSettings()
-{
-  HotkeyManagerEmu::GetConfig()->SaveConfig();
-}

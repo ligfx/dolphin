@@ -53,11 +53,6 @@ void GCKeyboardEmu::LoadSettings()
   Keyboard::LoadConfig();
 }
 
-void GCKeyboardEmu::SaveSettings()
-{
-  Keyboard::GetConfig()->SaveConfig();
-}
-
 InputConfig* GCKeyboardEmu::GetConfig()
 {
   return Keyboard::GetConfig();

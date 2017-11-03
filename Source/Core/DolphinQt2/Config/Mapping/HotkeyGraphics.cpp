@@ -41,8 +41,3 @@ void HotkeyGraphics::LoadSettings()
 {
   HotkeyManagerEmu::LoadConfig();
 }
-
-void HotkeyGraphics::SaveSettings()
-{
-  HotkeyManagerEmu::GetConfig()->SaveConfig();
-}

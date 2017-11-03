@@ -46,7 +46,7 @@ public:
   std::shared_ptr<ciface::Core::Device> GetDevice() const;
 
   virtual void LoadSettings() = 0;
-  virtual void SaveSettings() = 0;
+  void SaveSettings();
   virtual InputConfig* GetConfig() = 0;
   EmulatedControllerModel* GetModel() const;
 
