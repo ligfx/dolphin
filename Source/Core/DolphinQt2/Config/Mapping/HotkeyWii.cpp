@@ -9,7 +9,7 @@
 
 #include "Core/HotkeyManager.h"
 
-HotkeyWii::HotkeyWii(MappingWindow* window) : MappingWidget(window)
+HotkeyWii::HotkeyWii(EmulatedControllerModel* model) : MappingWidget(model)
 {
   CreateMainLayout();
 }

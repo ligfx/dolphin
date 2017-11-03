@@ -13,7 +13,7 @@
 #include "Core/HW/GCPad.h"
 #include "Core/HW/GCPadEmu.h"
 
-GCPadEmu::GCPadEmu(MappingWindow* window) : MappingWidget(window)
+GCPadEmu::GCPadEmu(EmulatedControllerModel* model) : MappingWidget(model)
 {
   CreateMainLayout();
 }

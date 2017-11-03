@@ -35,9 +35,10 @@
 #include "InputCommon/ControllerInterface/Device.h"
 #include "InputCommon/InputConfig.h"
 
-MappingWindow::MappingWindow(QWidget* parent, Type type, int port_num)
-    : QDialog(parent), m_port(port_num)
+MappingWindow::MappingWindow(QWidget* parent, Type type, int port_num) : QDialog(parent)
 {
+  m_model.m_port = port_num;
+
   setWindowTitle(tr("Port %1").arg(port_num + 1));
   setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
 
@@ -124,7 +125,7 @@ void MappingWindow::ConnectWidgets()
   connect(m_devices_refresh, &QPushButton::clicked, this, &MappingWindow::RefreshDevices);
   connect(m_devices_combo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
           this, &MappingWindow::OnDeviceChanged);
-  connect(m_reset_clear, &QPushButton::clicked, this, [this] { emit ClearFields(); });
+  connect(m_reset_clear, &QPushButton::clicked, &m_model, &EmulatedControllerModel::ClearFields);
   connect(m_reset_default, &QPushButton::clicked, this, &MappingWindow::OnDefaultFieldsPressed);
   connect(m_profiles_save, &QPushButton::clicked, this, &MappingWindow::OnSaveProfilePressed);
   connect(m_profiles_load, &QPushButton::clicked, this, &MappingWindow::OnLoadProfilePressed);
@@ -177,10 +178,10 @@ void MappingWindow::OnLoadProfilePressed()
   IniFile ini;
   ini.Load(profile_path.toStdString());
 
-  m_controller->LoadConfig(ini.GetOrCreateSection("Profile"));
-  m_controller->UpdateReferences(g_controller_interface);
+  m_model.m_controller->LoadConfig(ini.GetOrCreateSection("Profile"));
+  m_model.m_controller->UpdateReferences(g_controller_interface);
 
-  emit Update();
+  emit m_model.Update();
 
   RefreshDevices();
 }
@@ -197,7 +198,7 @@ void MappingWindow::OnSaveProfilePressed()
 
   IniFile ini;
 
-  m_controller->SaveConfig(ini.GetOrCreateSection("Profile"));
+  m_model.m_controller->SaveConfig(ini.GetOrCreateSection("Profile"));
   ini.Save(profile_path.toStdString());
 
   if (m_profiles_combo->currentIndex() == 0)
@@ -210,7 +211,7 @@ void MappingWindow::OnSaveProfilePressed()
 void MappingWindow::OnDeviceChanged(int index)
 {
   const auto device = m_devices_combo->currentText().toStdString();
-  m_controller->SetDefaultDevice(device);
+  m_model.m_controller->SetDefaultDevice(device);
 }
 
 void MappingWindow::RefreshDevices()
@@ -219,9 +220,9 @@ void MappingWindow::RefreshDevices()
 
   Core::RunAsCPUThread([&] {
     g_controller_interface.RefreshDevices();
-    m_controller->UpdateReferences(g_controller_interface);
+    m_model.m_controller->UpdateReferences(g_controller_interface);
 
-    const auto default_device = m_controller->GetDefaultDevice().ToString();
+    const auto default_device = m_model.m_controller->GetDefaultDevice().ToString();
 
     m_devices_combo->addItem(QString::fromStdString(default_device));
 
@@ -242,38 +243,38 @@ void MappingWindow::SetMappingType(MappingWindow::Type type)
   switch (type)
   {
   case Type::MAPPING_GC_KEYBOARD:
-    widget = new GCKeyboardEmu(this);
+    widget = new GCKeyboardEmu(&m_model);
     AddWidget(tr("GameCube Keyboard"), widget);
-    setWindowTitle(tr("GameCube Keyboard at Port %1").arg(GetPort() + 1));
+    setWindowTitle(tr("GameCube Keyboard at Port %1").arg(m_model.GetPort() + 1));
     break;
   case Type::MAPPING_GC_BONGOS:
   case Type::MAPPING_GC_STEERINGWHEEL:
   case Type::MAPPING_GC_DANCEMAT:
   case Type::MAPPING_GCPAD:
-    widget = new GCPadEmu(this);
-    setWindowTitle(tr("GameCube Controller at Port %1").arg(GetPort() + 1));
+    widget = new GCPadEmu(&m_model);
+    setWindowTitle(tr("GameCube Controller at Port %1").arg(m_model.GetPort() + 1));
     AddWidget(tr("GameCube Controller"), widget);
     break;
   case Type::MAPPING_WIIMOTE_EMU:
   case Type::MAPPING_WIIMOTE_HYBRID:
   {
-    auto* extension = new WiimoteEmuExtension(this);
-    widget = new WiimoteEmuGeneral(this, extension);
-    setWindowTitle(tr("Wii Remote %1").arg(GetPort() + 1));
+    auto* extension = new WiimoteEmuExtension(&m_model);
+    widget = new WiimoteEmuGeneral(&m_model, extension);
+    setWindowTitle(tr("Wii Remote %1").arg(m_model.GetPort() + 1));
     AddWidget(tr("General and Options"), widget);
-    AddWidget(tr("Motion Controls and IR"), new WiimoteEmuMotionControl(this));
+    AddWidget(tr("Motion Controls and IR"), new WiimoteEmuMotionControl(&m_model));
     AddWidget(tr("Extension"), extension);
     break;
   }
   case Type::MAPPING_HOTKEYS:
   {
-    widget = new HotkeyGeneral(this);
+    widget = new HotkeyGeneral(&m_model);
     AddWidget(tr("General"), widget);
-    AddWidget(tr("TAS Tools"), new HotkeyTAS(this));
-    AddWidget(tr("Wii and Wii Remote"), new HotkeyWii(this));
-    AddWidget(tr("Graphics"), new HotkeyGraphics(this));
-    AddWidget(tr("3D"), new Hotkey3D(this));
-    AddWidget(tr("Save and Load State"), new HotkeyStates(this));
+    AddWidget(tr("TAS Tools"), new HotkeyTAS(&m_model));
+    AddWidget(tr("Wii and Wii Remote"), new HotkeyWii(&m_model));
+    AddWidget(tr("Graphics"), new HotkeyGraphics(&m_model));
+    AddWidget(tr("3D"), new Hotkey3D(&m_model));
+    AddWidget(tr("Save and Load State"), new HotkeyStates(&m_model));
     setWindowTitle(tr("Hotkey Settings"));
     break;
   }
@@ -285,7 +286,7 @@ void MappingWindow::SetMappingType(MappingWindow::Type type)
 
   m_config = widget->GetConfig();
 
-  m_controller = m_config->GetController(GetPort());
+  m_model.m_controller = m_config->GetController(m_model.GetPort());
   m_profiles_combo->addItem(QStringLiteral(""));
 
   const std::string profiles_path =
@@ -305,24 +306,9 @@ void MappingWindow::AddWidget(const QString& name, QWidget* widget)
   m_tab_widget->addTab(widget, name);
 }
 
-int MappingWindow::GetPort() const
-{
-  return m_port;
-}
-
-ControllerEmu::EmulatedController* MappingWindow::GetController() const
-{
-  return m_controller;
-}
-
-std::shared_ptr<ciface::Core::Device> MappingWindow::GetDevice() const
-{
-  return g_controller_interface.FindDevice(GetController()->GetDefaultDevice());
-}
-
 void MappingWindow::OnDefaultFieldsPressed()
 {
-  m_controller->LoadDefaults(g_controller_interface);
-  m_controller->UpdateReferences(g_controller_interface);
-  emit Update();
+  m_model.m_controller->LoadDefaults(g_controller_interface);
+  m_model.m_controller->UpdateReferences(g_controller_interface);
+  emit m_model.Update();
 }

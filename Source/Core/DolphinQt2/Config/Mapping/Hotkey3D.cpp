@@ -9,7 +9,7 @@
 
 #include "Core/HotkeyManager.h"
 
-Hotkey3D::Hotkey3D(MappingWindow* window) : MappingWidget(window)
+Hotkey3D::Hotkey3D(EmulatedControllerModel* model) : MappingWidget(model)
 {
   CreateMainLayout();
 }

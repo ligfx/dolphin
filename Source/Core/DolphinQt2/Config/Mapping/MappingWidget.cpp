@@ -19,25 +19,25 @@
 #include "InputCommon/ControllerEmu/Setting/BooleanSetting.h"
 #include "InputCommon/ControllerEmu/Setting/NumericSetting.h"
 
-MappingWidget::MappingWidget(MappingWindow* window) : m_parent(window)
+MappingWidget::MappingWidget(EmulatedControllerModel* model) : m_model(model)
 {
-  connect(window, &MappingWindow::ClearFields, this, &MappingWidget::OnClearFields);
-  connect(window, &MappingWindow::Update, this, &MappingWidget::Update);
+  connect(model, &EmulatedControllerModel::ClearFields, this, &MappingWidget::OnClearFields);
+  connect(model, &EmulatedControllerModel::Update, this, &MappingWidget::Update);
 }
 
-MappingWindow* MappingWidget::GetParent() const
+EmulatedControllerModel* MappingWidget::GetModel() const
 {
-  return m_parent;
+  return m_model;
 }
 
 std::shared_ptr<ciface::Core::Device> MappingWidget::GetDevice() const
 {
-  return m_parent->GetDevice();
+  return m_model->GetDevice();
 }
 
 int MappingWidget::GetPort() const
 {
-  return m_parent->GetPort();
+  return m_model->GetPort();
 }
 
 QGroupBox* MappingWidget::CreateGroupBox(const QString& name, ControllerEmu::ControlGroup* group)
@@ -58,7 +58,7 @@ QGroupBox* MappingWidget::CreateGroupBox(const QString& name, ControllerEmu::Con
     auto* control_ref = control->control_ref.get();
 
     connect(button, &MappingButton::AdvancedPressed, [this, button, control_ref] {
-      IOWindow io(this, m_parent->GetController(), control_ref,
+      IOWindow io(this, m_model->GetController(), control_ref,
                   control_ref->IsInput() ? IOWindow::Type::Input : IOWindow::Type::Output);
       io.exec();
       SaveSettings();
@@ -113,5 +113,5 @@ void MappingWidget::Update()
 
 ControllerEmu::EmulatedController* MappingWidget::GetController() const
 {
-  return m_parent->GetController();
+  return m_model->GetController();
 }

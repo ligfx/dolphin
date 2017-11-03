@@ -16,7 +16,7 @@ class QVBoxLayout;
 class GCPadEmu final : public MappingWidget
 {
 public:
-  explicit GCPadEmu(MappingWindow* window);
+  explicit GCPadEmu(EmulatedControllerModel* model);
 
   InputConfig* GetConfig() override;
 

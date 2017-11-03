@@ -57,7 +57,7 @@ void MappingButton::OnButtonPressed()
     Common::SleepCurrentThread(100);
 
     const auto expr = MappingCommon::DetectExpression(
-        m_reference, dev.get(), m_parent->GetController()->GetDefaultDevice());
+        m_reference, dev.get(), m_parent->GetModel()->GetController()->GetDefaultDevice());
 
     releaseMouse();
     releaseKeyboard();
@@ -90,7 +90,7 @@ void MappingButton::Update()
 {
   const auto lock = ControllerEmu::EmulatedController::GetStateLock();
   m_reference->UpdateReference(g_controller_interface,
-                               m_parent->GetController()->GetDefaultDevice());
+                               m_parent->GetModel()->GetController()->GetDefaultDevice());
   setText(EscapeAmpersand(QString::fromStdString(m_reference->GetExpression())));
 }
 

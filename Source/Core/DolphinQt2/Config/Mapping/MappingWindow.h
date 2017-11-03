@@ -8,12 +8,7 @@
 #include <QString>
 #include <memory>
 
-#include "InputCommon/ControllerInterface/Device.h"
-
-namespace ControllerEmu
-{
-class EmulatedController;
-}
+#include "DolphinQt2/Config/Mapping/EmulatedControllerModel.h"
 
 class InputConfig;
 class QComboBox;
@@ -47,14 +42,6 @@ public:
 
   explicit MappingWindow(QWidget* parent, Type type, int port_num);
 
-  int GetPort() const;
-  std::shared_ptr<ciface::Core::Device> GetDevice() const;
-
-  ControllerEmu::EmulatedController* GetController() const;
-signals:
-  void Update();
-  void ClearFields();
-
 private:
   void SetMappingType(Type type);
   void CreateDevicesLayout();
@@ -73,7 +60,7 @@ private:
   void OnDefaultFieldsPressed();
   void OnDeviceChanged(int index);
 
-  ControllerEmu::EmulatedController* m_controller = nullptr;
+  EmulatedControllerModel m_model;
 
   // Main
   QVBoxLayout* m_main_layout;
@@ -103,6 +90,5 @@ private:
   QTabWidget* m_tab_widget;
 
   Type m_mapping_type;
-  const int m_port;
   InputConfig* m_config;
 };

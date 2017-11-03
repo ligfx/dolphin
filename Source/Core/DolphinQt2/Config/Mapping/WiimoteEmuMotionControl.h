@@ -16,7 +16,7 @@ class QVBoxLayout;
 class WiimoteEmuMotionControl final : public MappingWidget
 {
 public:
-  explicit WiimoteEmuMotionControl(MappingWindow* window);
+  explicit WiimoteEmuMotionControl(EmulatedControllerModel* model);
 
   InputConfig* GetConfig() override;
 

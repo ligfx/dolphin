@@ -12,7 +12,7 @@
 #include "Core/HW/WiimoteEmu/WiimoteEmu.h"
 #include "InputCommon/InputConfig.h"
 
-WiimoteEmuExtension::WiimoteEmuExtension(MappingWindow* window) : MappingWidget(window)
+WiimoteEmuExtension::WiimoteEmuExtension(EmulatedControllerModel* model) : MappingWidget(model)
 {
   CreateClassicLayout();
   CreateDrumsLayout();

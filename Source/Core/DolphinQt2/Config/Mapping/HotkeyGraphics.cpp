@@ -10,7 +10,7 @@
 
 #include "Core/HotkeyManager.h"
 
-HotkeyGraphics::HotkeyGraphics(MappingWindow* window) : MappingWidget(window)
+HotkeyGraphics::HotkeyGraphics(EmulatedControllerModel* model) : MappingWidget(model)
 {
   CreateMainLayout();
 }

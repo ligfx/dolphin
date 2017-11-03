@@ -16,8 +16,8 @@
 #include "InputCommon/ControllerEmu/ControlGroup/Extension.h"
 #include "InputCommon/InputConfig.h"
 
-WiimoteEmuGeneral::WiimoteEmuGeneral(MappingWindow* window, WiimoteEmuExtension* extension)
-    : MappingWidget(window), m_extension_widget(extension)
+WiimoteEmuGeneral::WiimoteEmuGeneral(EmulatedControllerModel* model, WiimoteEmuExtension* extension)
+    : MappingWidget(model), m_extension_widget(extension)
 {
   CreateMainLayout();
   Connect();

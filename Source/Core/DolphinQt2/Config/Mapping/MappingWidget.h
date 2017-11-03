@@ -34,20 +34,21 @@ class Device;
 }
 }
 
+class EmulatedControllerModel;
+
 class MappingWidget : public QWidget
 {
   Q_OBJECT
 public:
-  explicit MappingWidget(MappingWindow* window);
+  explicit MappingWidget(EmulatedControllerModel* model);
 
   ControllerEmu::EmulatedController* GetController() const;
   std::shared_ptr<ciface::Core::Device> GetDevice() const;
 
-  MappingWindow* GetParent() const;
-
   virtual void LoadSettings() = 0;
   virtual void SaveSettings() = 0;
   virtual InputConfig* GetConfig() = 0;
+  EmulatedControllerModel* GetModel() const;
 
   void Update();
 
@@ -58,7 +59,7 @@ protected:
 private:
   void OnClearFields();
 
-  MappingWindow* m_parent;
+  EmulatedControllerModel* m_model;
   bool m_first = true;
   std::vector<MappingBool*> m_bools;
   std::vector<MappingButton*> m_buttons;

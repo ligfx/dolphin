@@ -16,7 +16,7 @@ class QVBoxLayout;
 class GCKeyboardEmu final : public MappingWidget
 {
 public:
-  explicit GCKeyboardEmu(MappingWindow* window);
+  explicit GCKeyboardEmu(EmulatedControllerModel* model);
 
   InputConfig* GetConfig() override;
 

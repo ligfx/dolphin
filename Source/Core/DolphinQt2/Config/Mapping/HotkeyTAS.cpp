@@ -9,7 +9,7 @@
 
 #include "Core/HotkeyManager.h"
 
-HotkeyTAS::HotkeyTAS(MappingWindow* window) : MappingWidget(window)
+HotkeyTAS::HotkeyTAS(EmulatedControllerModel* model) : MappingWidget(model)
 {
   CreateMainLayout();
 }

@@ -9,7 +9,7 @@
 
 #include "Core/HotkeyManager.h"
 
-HotkeyStates::HotkeyStates(MappingWindow* window) : MappingWidget(window)
+HotkeyStates::HotkeyStates(EmulatedControllerModel* model) : MappingWidget(model)
 {
   CreateMainLayout();
 }

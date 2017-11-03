@@ -12,7 +12,7 @@ class WiimoteEmuExtension;
 class WiimoteEmuGeneral final : public MappingWidget
 {
 public:
-  explicit WiimoteEmuGeneral(MappingWindow* window, WiimoteEmuExtension* extension);
+  WiimoteEmuGeneral(EmulatedControllerModel* model, WiimoteEmuExtension* extension);
 
   InputConfig* GetConfig() override;
 

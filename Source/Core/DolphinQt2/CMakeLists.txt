@@ -48,6 +48,7 @@ set(SRCS
   Config/InfoWidget.cpp
   Config/LogConfigWidget.cpp
   Config/LogWidget.cpp
+  Config/Mapping/EmulatedControllerModel.cpp
   Config/Mapping/GCKeyboardEmu.cpp
   Config/Mapping/GCPadEmu.cpp
   Config/Mapping/GCPadWiiUConfigDialog.cpp

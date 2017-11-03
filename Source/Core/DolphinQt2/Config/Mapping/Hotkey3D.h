@@ -11,7 +11,7 @@ class QHBoxLayout;
 class Hotkey3D final : public MappingWidget
 {
 public:
-  explicit Hotkey3D(MappingWindow* window);
+  explicit Hotkey3D(EmulatedControllerModel* model);
 
   InputConfig* GetConfig() override;
 

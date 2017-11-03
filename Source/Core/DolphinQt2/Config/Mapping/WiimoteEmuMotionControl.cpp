@@ -13,7 +13,8 @@
 #include "Core/HW/WiimoteEmu/WiimoteEmu.h"
 #include "InputCommon/InputConfig.h"
 
-WiimoteEmuMotionControl::WiimoteEmuMotionControl(MappingWindow* window) : MappingWidget(window)
+WiimoteEmuMotionControl::WiimoteEmuMotionControl(EmulatedControllerModel* model)
+    : MappingWidget(model)
 {
   CreateMainLayout();
 }

@@ -22,7 +22,7 @@ public:
     TURNTABLE
   };
 
-  explicit WiimoteEmuExtension(MappingWindow* window);
+  explicit WiimoteEmuExtension(EmulatedControllerModel* model);
 
   InputConfig* GetConfig() override;
 

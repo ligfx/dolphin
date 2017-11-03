@@ -11,7 +11,7 @@ class QHBoxLayout;
 class HotkeyTAS final : public MappingWidget
 {
 public:
-  explicit HotkeyTAS(MappingWindow* window);
+  explicit HotkeyTAS(EmulatedControllerModel* model);
 
   InputConfig* GetConfig() override;
 

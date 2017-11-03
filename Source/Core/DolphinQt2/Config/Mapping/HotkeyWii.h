@@ -11,7 +11,7 @@ class QHBoxLayout;
 class HotkeyWii final : public MappingWidget
 {
 public:
-  explicit HotkeyWii(MappingWindow* window);
+  explicit HotkeyWii(EmulatedControllerModel* model);
 
   InputConfig* GetConfig() override;
 

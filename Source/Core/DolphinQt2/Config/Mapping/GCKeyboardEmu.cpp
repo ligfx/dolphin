@@ -13,7 +13,7 @@
 #include "Core/HW/GCKeyboard.h"
 #include "Core/HW/GCKeyboardEmu.h"
 
-GCKeyboardEmu::GCKeyboardEmu(MappingWindow* window) : MappingWidget(window)
+GCKeyboardEmu::GCKeyboardEmu(EmulatedControllerModel* model) : MappingWidget(model)
 {
   CreateMainLayout();
 }
