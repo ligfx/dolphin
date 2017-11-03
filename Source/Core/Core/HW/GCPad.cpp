@@ -15,7 +15,7 @@
 
 namespace Pad
 {
-static InputConfig s_config("GCPadNew", _trans("Pad"), "GCPad");
+static InputConfig s_config("GCPadNew", _trans("Pad"), "GCPad", true);
 InputConfig* GetConfig()
 {
   return &s_config;
@@ -37,12 +37,12 @@ void Initialize()
   g_controller_interface.RegisterDevicesChangedCallback(LoadConfig);
 
   // Load the saved controller config
-  s_config.LoadConfig(true);
+  s_config.LoadConfig();
 }
 
 void LoadConfig()
 {
-  s_config.LoadConfig(true);
+  s_config.LoadConfig();
 }
 
 GCPadStatus GetStatus(int pad_num)

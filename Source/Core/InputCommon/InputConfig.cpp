@@ -15,14 +15,15 @@
 #include "InputCommon/InputConfig.h"
 
 InputConfig::InputConfig(const std::string& ini_name, const std::string& gui_name,
-                         const std::string& profile_name)
-    : m_ini_name(ini_name), m_gui_name(gui_name), m_profile_name(profile_name)
+                         const std::string& profile_name, bool is_gamecube)
+    : m_ini_name(ini_name), m_gui_name(gui_name), m_profile_name(profile_name),
+      m_is_gamecube(is_gamecube)
 {
 }
 
 InputConfig::~InputConfig() = default;
 
-bool InputConfig::LoadConfig(bool isGC)
+bool InputConfig::LoadConfig()
 {
   IniFile inifile;
   bool useProfile[MAX_BBMOTES] = {false, false, false, false, false};
@@ -33,7 +34,7 @@ bool InputConfig::LoadConfig(bool isGC)
   if (SConfig::GetInstance().GetGameID() != "00000000")
   {
     std::string type;
-    if (isGC)
+    if (m_is_gamecube)
     {
       type = "Pad";
       path = "Profiles/GCPad/";

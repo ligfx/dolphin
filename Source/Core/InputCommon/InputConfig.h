@@ -18,11 +18,11 @@ class InputConfig
 {
 public:
   InputConfig(const std::string& ini_name, const std::string& gui_name,
-              const std::string& profile_name);
+              const std::string& profile_name, bool is_gamecube);
 
   ~InputConfig();
 
-  bool LoadConfig(bool isGC);
+  bool LoadConfig();
   void SaveConfig();
 
   template <typename T, typename... Args>
@@ -43,4 +43,5 @@ private:
   const std::string m_ini_name;
   const std::string m_gui_name;
   const std::string m_profile_name;
+  bool m_is_gamecube;
 };
