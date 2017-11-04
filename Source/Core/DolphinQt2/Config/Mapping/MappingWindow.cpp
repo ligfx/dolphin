@@ -8,6 +8,7 @@
 #include <QHBoxLayout>
 #include <QMessageBox>
 #include <QPushButton>
+#include <QSignalBlocker>
 #include <QTabWidget>
 #include <QVBoxLayout>
 
@@ -34,6 +35,48 @@
 #include "InputCommon/ControllerInterface/Device.h"
 #include "InputCommon/InputConfig.h"
 
+DevicesBox::DevicesBox(EmulatedControllerModel* model) : QGroupBox(tr("Device")), m_model(model)
+{
+  // CreateWidgets
+  auto* layout = new QHBoxLayout();
+  m_combo = new QComboBox();
+  m_refresh = new QPushButton(tr("Refresh"));
+
+  m_refresh->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+  layout->addWidget(m_combo);
+  layout->addWidget(m_refresh);
+
+  setLayout(layout);
+
+  // ConnectWidgets
+  connect(m_refresh, &QPushButton::clicked,
+          [] { Core::RunAsCPUThread([&] { g_controller_interface.RefreshDevices(); }); });
+
+  connect(m_combo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this,
+          [this] { m_model->SetDevice(m_combo->currentText().toStdString()); });
+
+  connect(&Settings::Instance(), &Settings::DevicesChanged, this, &DevicesBox::Update);
+  connect(m_model, &EmulatedControllerModel::DefaultDeviceChanged, this, &DevicesBox::Update);
+
+  Update();
+};
+
+void DevicesBox::Update()
+{
+  const QSignalBlocker blocker(m_combo);
+  m_combo->clear();
+
+  const auto default_device = m_model->m_controller->GetDefaultDevice().ToString();
+  m_combo->addItem(QString::fromStdString(default_device));
+  m_combo->setCurrentIndex(0);
+
+  for (const auto& name : g_controller_interface.GetAllDeviceStrings())
+  {
+    if (name != default_device)
+      m_combo->addItem(QString::fromStdString(name));
+  }
+}
+
 MappingWindow::MappingWindow(QWidget* parent, Type type, int port_num) : QDialog(parent)
 {
   m_model.m_port = port_num;
@@ -51,16 +94,7 @@ MappingWindow::MappingWindow(QWidget* parent, Type type, int port_num) : QDialog
 
 void MappingWindow::CreateDevicesLayout()
 {
-  m_devices_layout = new QHBoxLayout();
-  m_devices_box = new QGroupBox(tr("Device"));
-  m_devices_combo = new QComboBox();
-  m_devices_refresh = new QPushButton(tr("Refresh"));
-
-  m_devices_refresh->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-  m_devices_layout->addWidget(m_devices_combo);
-  m_devices_layout->addWidget(m_devices_refresh);
-
-  m_devices_box->setLayout(m_devices_layout);
+  m_devices_box = new DevicesBox(&m_model);
 }
 
 void MappingWindow::CreateProfilesLayout()
@@ -121,9 +155,6 @@ void MappingWindow::CreateMainLayout()
 
 void MappingWindow::ConnectWidgets()
 {
-  connect(m_devices_refresh, &QPushButton::clicked, this, &MappingWindow::RefreshDevices);
-  connect(m_devices_combo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
-          this, &MappingWindow::OnDeviceChanged);
   connect(m_reset_clear, &QPushButton::clicked, &m_model, &EmulatedControllerModel::Clear);
   connect(m_reset_default, &QPushButton::clicked, &m_model, &EmulatedControllerModel::LoadDefaults);
   connect(m_profiles_save, &QPushButton::clicked, this, &MappingWindow::OnSaveProfilePressed);
@@ -175,6 +206,7 @@ void MappingWindow::OnLoadProfilePressed()
     return;
 
   m_model.LoadProfile(profile_path.toStdString());
+  // This refreshes devices because the default device changed!
   RefreshDevices();
 }
 
@@ -193,33 +225,6 @@ void MappingWindow::OnSaveProfilePressed()
     m_profiles_combo->addItem(profile_name, profile_path);
     m_profiles_combo->setCurrentIndex(m_profiles_combo->count() - 1);
   }
-}
-
-void MappingWindow::OnDeviceChanged(int index)
-{
-  m_model.SetDevice(m_devices_combo->currentText().toStdString());
-}
-
-void MappingWindow::RefreshDevices()
-{
-  m_devices_combo->clear();
-
-  Core::RunAsCPUThread([&] {
-    g_controller_interface.RefreshDevices();
-    m_model.OnDevicesChanged();
-
-    const auto default_device = m_model.m_controller->GetDefaultDevice().ToString();
-
-    m_devices_combo->addItem(QString::fromStdString(default_device));
-
-    for (const auto& name : g_controller_interface.GetAllDeviceStrings())
-    {
-      if (name != default_device)
-        m_devices_combo->addItem(QString::fromStdString(name));
-    }
-
-    m_devices_combo->setCurrentIndex(0);
-  });
 }
 
 void MappingWindow::SetMappingType(MappingWindow::Type type)

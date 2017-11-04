@@ -2,6 +2,7 @@
 
 #include "Common/FileUtil.h"
 #include "Common/IniFile.h"
+#include "DolphinQt2/Settings.h"
 #include "InputCommon/ControlReference/ControlReference.h"
 #include "InputCommon/ControllerEmu/Control/Control.h"
 #include "InputCommon/ControllerEmu/ControlGroup/ControlGroup.h"
@@ -11,9 +12,13 @@
 #include "InputCommon/ControllerInterface/ControllerInterface.h"
 #include "InputCommon/InputConfig.h"
 
-void EmulatedControllerModel::OnDevicesChanged()
+EmulatedControllerModel::EmulatedControllerModel()
 {
-  m_controller->UpdateReferences(g_controller_interface);
+  connect(&Settings::Instance(), &Settings::DevicesChanged, this, [this] {
+    if (!m_controller)
+      return;
+    m_controller->UpdateReferences(g_controller_interface);
+  });
 }
 
 void EmulatedControllerModel::SaveProfile(const std::string& profile_path)
@@ -33,6 +38,7 @@ void EmulatedControllerModel::LoadProfile(const std::string& profile_path)
   m_controller->LoadConfig(ini.GetOrCreateSection("Profile"));
   m_controller->UpdateReferences(g_controller_interface);
 
+  emit DefaultDeviceChanged();
   emit Update();
 }
 
@@ -43,12 +49,19 @@ void EmulatedControllerModel::LoadDefaults()
 
   m_controller->LoadDefaults(g_controller_interface);
   m_controller->UpdateReferences(g_controller_interface);
+  emit DefaultDeviceChanged();
   emit Update();
 }
 
 void EmulatedControllerModel::SetDevice(const std::string& device)
 {
-  m_controller->SetDefaultDevice(device);
+  ciface::Core::DeviceQualifier devq;
+  devq.FromString(device);
+  if (devq == m_controller->GetDefaultDevice())
+    return;
+
+  m_controller->SetDefaultDevice(std::move(devq));
+  emit DefaultDeviceChanged();
 }
 
 void EmulatedControllerModel::Clear()

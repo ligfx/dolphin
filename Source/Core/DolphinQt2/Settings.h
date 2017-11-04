@@ -97,6 +97,7 @@ signals:
   void LogVisibilityChanged(bool visible);
   void LogConfigVisibilityChanged(bool visible);
   void EnableCheatsChanged(bool enabled);
+  void DevicesChanged();
 
 private:
   std::unique_ptr<NetPlayClient> m_client;

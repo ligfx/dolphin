@@ -15,6 +15,7 @@
 #include "DolphinQt2/GameList/GameListModel.h"
 #include "DolphinQt2/QtUtils/QueueOnObject.h"
 #include "DolphinQt2/Settings.h"
+#include "InputCommon/ControllerInterface/ControllerInterface.h"
 #include "InputCommon/InputConfig.h"
 
 Settings::Settings()
@@ -25,6 +26,9 @@ Settings::Settings()
 
   Config::AddConfigChangedCallback(
       [this] { QueueOnObject(this, [this] { emit ConfigChanged(); }); });
+
+  g_controller_interface.RegisterDevicesChangedCallback(
+      [this] { QueueOnObject(this, [this] { emit DevicesChanged(); }); });
 }
 
 Settings& Settings::Instance()

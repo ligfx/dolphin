@@ -20,7 +20,7 @@ class EmulatedControllerModel : public QObject
 {
   Q_OBJECT
 public:
-  void OnDevicesChanged();
+  EmulatedControllerModel();
   void SaveProfile(const std::string& profile_path);
   void LoadProfile(const std::string& profile_path);
   void LoadDefaults();
@@ -37,6 +37,7 @@ public:
   int m_port = -1;
 
 signals:
+  void DefaultDeviceChanged();
   void Update();
 
 private:

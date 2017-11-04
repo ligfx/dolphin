@@ -5,6 +5,7 @@
 #pragma once
 
 #include <QDialog>
+#include <QGroupBox>
 #include <QString>
 #include <memory>
 
@@ -20,6 +21,18 @@ class QVBoxLayout;
 class QPushButton;
 class QTabWidget;
 class QWidget;
+
+class DevicesBox : public QGroupBox
+{
+public:
+  explicit DevicesBox(EmulatedControllerModel* model);
+
+private:
+  void Update();
+  EmulatedControllerModel* m_model;
+  QComboBox* m_combo;
+  QPushButton* m_refresh;
+};
 
 class MappingWindow final : public QDialog
 {
@@ -52,12 +65,9 @@ private:
 
   void AddWidget(const QString& name, QWidget* widget);
 
-  void RefreshDevices();
-
   void OnDeleteProfilePressed();
   void OnLoadProfilePressed();
   void OnSaveProfilePressed();
-  void OnDeviceChanged(int index);
 
   EmulatedControllerModel m_model;
 
@@ -67,10 +77,7 @@ private:
   QDialogButtonBox* m_button_box;
 
   // Devices
-  QGroupBox* m_devices_box;
-  QHBoxLayout* m_devices_layout;
-  QComboBox* m_devices_combo;
-  QPushButton* m_devices_refresh;
+  DevicesBox* m_devices_box;
 
   // Profiles
   QGroupBox* m_profiles_box;
