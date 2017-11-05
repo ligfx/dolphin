@@ -6,7 +6,6 @@
 
 #include <thread>
 
-#include <QComboBox>
 #include <QDialogButtonBox>
 #include <QGroupBox>
 #include <QHBoxLayout>
@@ -19,6 +18,7 @@
 #include <QVBoxLayout>
 
 #include "Core/Core.h"
+#include "DolphinQt2/Config/Mapping/InputDevicesComboBox.h"
 #include "DolphinQt2/Config/Mapping/MappingCommon.h"
 #include "DolphinQt2/Config/Mapping/MappingWindow.h"
 #include "DolphinQt2/QtUtils/BlockUserInputFilter.h"
@@ -43,7 +43,7 @@ void IOWindow::CreateMainLayout()
 {
   m_main_layout = new QVBoxLayout();
 
-  m_devices_combo = new QComboBox();
+  m_devices_combo = new InputDevicesComboBox();
   m_option_list = new QListWidget();
   m_select_button = new QPushButton(tr("Select"));
   m_detect_button = new QPushButton(tr("Detect"));
@@ -114,9 +114,6 @@ void IOWindow::Update()
   m_range_spinbox->setValue(m_reference->range * SLIDER_TICK_COUNT);
   m_range_slider->setValue(m_reference->range * SLIDER_TICK_COUNT);
 
-  m_devq = m_controller->GetDefaultDevice();
-
-  UpdateDeviceList();
   UpdateOptionList();
 }
 
@@ -131,8 +128,10 @@ void IOWindow::ConnectWidgets()
   connect(m_type == IOWindow::Type::Input ? m_detect_button : m_test_button, &QPushButton::clicked,
           this, &IOWindow::OnDetectButtonPressed);
 
+  connect(m_devices_combo, &InputDevicesComboBox::DeviceChanged, this, &IOWindow::UpdateOptionList);
+  m_devices_combo->SetDevice(m_controller->GetDefaultDevice());
+
   connect(m_button_box, &QDialogButtonBox::clicked, this, &IOWindow::OnDialogButtonPressed);
-  connect(m_devices_combo, &QComboBox::currentTextChanged, this, &IOWindow::OnDeviceChanged);
   connect(m_range_spinbox, static_cast<void (QSpinBox::*)(int value)>(&QSpinBox::valueChanged),
           this, &IOWindow::OnRangeChanged);
   connect(m_range_slider, static_cast<void (QSlider::*)(int value)>(&QSlider::valueChanged), this,
@@ -146,14 +145,9 @@ void IOWindow::AppendSelectedOption(const std::string& prefix)
 
   m_expression_text->insertPlainText(
       QString::fromStdString(prefix) +
-      MappingCommon::GetExpressionForControl(m_option_list->currentItem()->text(), m_devq,
+      MappingCommon::GetExpressionForControl(m_option_list->currentItem()->text(),
+                                             m_devices_combo->GetDeviceQualifier(),
                                              m_controller->GetDefaultDevice()));
-}
-
-void IOWindow::OnDeviceChanged(const QString& device)
-{
-  m_devq.FromString(device.toStdString());
-  UpdateOptionList();
 }
 
 void IOWindow::OnDialogButtonPressed(QAbstractButton* button)
@@ -172,7 +166,7 @@ void IOWindow::OnDialogButtonPressed(QAbstractButton* button)
 
 void IOWindow::OnDetectButtonPressed()
 {
-  auto* device = g_controller_interface.FindDevice(m_devq).get();
+  auto* device = g_controller_interface.FindDevice(m_devices_combo->GetDeviceQualifier()).get();
   if (!device)
     return;
 
@@ -186,7 +180,8 @@ void IOWindow::OnDetectButtonPressed()
 
     btn->setText(QStringLiteral("..."));
 
-    const auto expr = MappingCommon::DetectExpression(m_reference, device, m_devq);
+    const auto expr =
+        MappingCommon::DetectExpression(m_reference, device, m_devices_combo->GetDeviceQualifier());
 
     btn->setText(old_label);
 
@@ -215,7 +210,7 @@ void IOWindow::UpdateOptionList()
 {
   m_option_list->clear();
 
-  const auto device = g_controller_interface.FindDevice(m_devq);
+  const auto device = g_controller_interface.FindDevice(m_devices_combo->GetDeviceQualifier());
   if (!device)
     return;
 
@@ -233,27 +228,4 @@ void IOWindow::UpdateOptionList()
       m_option_list->addItem(QString::fromStdString(output->GetName()));
     }
   }
-}
-
-void IOWindow::UpdateDeviceList()
-{
-  m_devices_combo->clear();
-
-  Core::RunAsCPUThread([&] {
-    g_controller_interface.RefreshDevices();
-    m_controller->UpdateReferences(g_controller_interface);
-
-    // Adding default device regardless if it's currently connected or not
-    const auto default_device = m_controller->GetDefaultDevice().ToString();
-
-    m_devices_combo->addItem(QString::fromStdString(default_device));
-
-    for (const auto& name : g_controller_interface.GetAllDeviceStrings())
-    {
-      if (name != default_device)
-        m_devices_combo->addItem(QString::fromStdString(name));
-    }
-
-    m_devices_combo->setCurrentIndex(0);
-  });
 }

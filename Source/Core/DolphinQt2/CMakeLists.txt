@@ -58,6 +58,7 @@ set(SRCS
   Config/Mapping/HotkeyStates.cpp
   Config/Mapping/HotkeyTAS.cpp
   Config/Mapping/HotkeyWii.cpp
+  Config/Mapping/InputDevicesComboBox.cpp
   Config/Mapping/IOWindow.cpp
   Config/Mapping/MappingBool.cpp
   Config/Mapping/MappingButton.cpp

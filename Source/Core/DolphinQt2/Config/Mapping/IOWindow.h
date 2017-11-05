@@ -6,13 +6,14 @@
 
 #include <QDialog>
 #include <QString>
+#include <string>
 
 #include "Common/Flag.h"
 #include "InputCommon/ControllerInterface/Device.h"
 
 class ControlReference;
+class InputDevicesComboBox;
 class QAbstractButton;
-class QComboBox;
 class QDialogButtonBox;
 class QListWidget;
 class QVBoxLayout;
@@ -46,7 +47,6 @@ private:
   void Update();
 
   void OnDialogButtonPressed(QAbstractButton* button);
-  void OnDeviceChanged(const QString& device);
   void OnDetectButtonPressed();
   void OnRangeChanged(int range);
 
@@ -58,7 +58,7 @@ private:
   QVBoxLayout* m_main_layout;
 
   // Devices
-  QComboBox* m_devices_combo;
+  InputDevicesComboBox* m_devices_combo;
 
   // Options
   QListWidget* m_option_list;
@@ -91,6 +91,5 @@ private:
   ControlReference* m_reference;
   ControllerEmu::EmulatedController* m_controller;
 
-  ciface::Core::DeviceQualifier m_devq;
   Type m_type;
 };

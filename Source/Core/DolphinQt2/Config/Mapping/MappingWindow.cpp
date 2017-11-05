@@ -26,6 +26,7 @@
 #include "DolphinQt2/Config/Mapping/HotkeyStates.h"
 #include "DolphinQt2/Config/Mapping/HotkeyTAS.h"
 #include "DolphinQt2/Config/Mapping/HotkeyWii.h"
+#include "DolphinQt2/Config/Mapping/InputDevicesComboBox.h"
 #include "DolphinQt2/Config/Mapping/WiimoteEmuExtension.h"
 #include "DolphinQt2/Config/Mapping/WiimoteEmuGeneral.h"
 #include "DolphinQt2/Config/Mapping/WiimoteEmuMotionControl.h"
@@ -34,48 +35,6 @@
 #include "InputCommon/ControllerInterface/ControllerInterface.h"
 #include "InputCommon/ControllerInterface/Device.h"
 #include "InputCommon/InputConfig.h"
-
-DevicesBox::DevicesBox(EmulatedControllerModel* model) : QGroupBox(tr("Device")), m_model(model)
-{
-  // CreateWidgets
-  auto* layout = new QHBoxLayout();
-  m_combo = new QComboBox();
-  m_refresh = new QPushButton(tr("Refresh"));
-
-  m_refresh->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-  layout->addWidget(m_combo);
-  layout->addWidget(m_refresh);
-
-  setLayout(layout);
-
-  // ConnectWidgets
-  connect(m_refresh, &QPushButton::clicked,
-          [] { Core::RunAsCPUThread([&] { g_controller_interface.RefreshDevices(); }); });
-
-  connect(m_combo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this,
-          [this] { m_model->SetDevice(m_combo->currentText().toStdString()); });
-
-  connect(&Settings::Instance(), &Settings::DevicesChanged, this, &DevicesBox::Update);
-  connect(m_model, &EmulatedControllerModel::DefaultDeviceChanged, this, &DevicesBox::Update);
-
-  Update();
-};
-
-void DevicesBox::Update()
-{
-  const QSignalBlocker blocker(m_combo);
-  m_combo->clear();
-
-  const auto default_device = m_model->m_controller->GetDefaultDevice().ToString();
-  m_combo->addItem(QString::fromStdString(default_device));
-  m_combo->setCurrentIndex(0);
-
-  for (const auto& name : g_controller_interface.GetAllDeviceStrings())
-  {
-    if (name != default_device)
-      m_combo->addItem(QString::fromStdString(name));
-  }
-}
 
 ProfilesBox::ProfilesBox(EmulatedControllerModel* model) : QGroupBox(tr("Profile")), m_model(model)
 {
@@ -198,7 +157,16 @@ MappingWindow::MappingWindow(QWidget* parent, Type type, int port_num) : QDialog
 
 void MappingWindow::CreateDevicesLayout()
 {
-  m_devices_box = new DevicesBox(&m_model);
+  auto* devices_layout = new QHBoxLayout();
+  m_devices_box = new QGroupBox(tr("Devices"));
+  m_devices_combo = new InputDevicesComboBox();
+  m_devices_refresh = new QPushButton(tr("Refresh"));
+
+  m_devices_refresh->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+  devices_layout->addWidget(m_devices_combo);
+  devices_layout->addWidget(m_devices_refresh);
+
+  m_devices_box->setLayout(devices_layout);
 }
 
 void MappingWindow::CreateProfilesLayout()
@@ -240,6 +208,16 @@ void MappingWindow::CreateMainLayout()
 
 void MappingWindow::ConnectWidgets()
 {
+  connect(m_devices_combo, &InputDevicesComboBox::DeviceChanged, &m_model,
+          &EmulatedControllerModel::SetDevice);
+  auto update_default_device = [this] {
+    m_devices_combo->SetDevice(m_model.GetController()->GetDefaultDevice().ToString());
+  };
+  connect(&m_model, &EmulatedControllerModel::DefaultDeviceChanged, this, update_default_device);
+  update_default_device();
+
+  connect(m_devices_refresh, &QPushButton::clicked,
+          [] { Core::RunAsCPUThread([&] { g_controller_interface.RefreshDevices(); }); });
   connect(m_reset_clear, &QPushButton::clicked, &m_model, &EmulatedControllerModel::Clear);
   connect(m_reset_default, &QPushButton::clicked, &m_model, &EmulatedControllerModel::LoadDefaults);
   connect(m_button_box, &QDialogButtonBox::accepted, this, &MappingWindow::accept);

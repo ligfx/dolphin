@@ -11,6 +11,7 @@
 
 #include "DolphinQt2/Config/Mapping/EmulatedControllerModel.h"
 
+class InputDevicesComboBox;
 class InputConfig;
 class QComboBox;
 class QDialogButtonBox;
@@ -21,18 +22,6 @@ class QVBoxLayout;
 class QPushButton;
 class QTabWidget;
 class QWidget;
-
-class DevicesBox : public QGroupBox
-{
-public:
-  explicit DevicesBox(EmulatedControllerModel* model);
-
-private:
-  void Update();
-  EmulatedControllerModel* m_model;
-  QComboBox* m_combo;
-  QPushButton* m_refresh;
-};
 
 class ProfilesBox : public QGroupBox
 {
@@ -90,7 +79,9 @@ private:
   QDialogButtonBox* m_button_box;
 
   // Devices
-  DevicesBox* m_devices_box;
+  QGroupBox* m_devices_box;
+  InputDevicesComboBox* m_devices_combo;
+  QPushButton* m_devices_refresh;
 
   // Profiles
   ProfilesBox* m_profiles_box;
