@@ -37,6 +37,7 @@ void EmulatedControllerModel::LoadProfile(const std::string& profile_path)
 
   m_controller->LoadConfig(ini.GetOrCreateSection("Profile"));
   m_controller->UpdateReferences(g_controller_interface);
+  SaveSettings();
 
   emit DefaultDeviceChanged();
   emit Update();
@@ -49,6 +50,8 @@ void EmulatedControllerModel::LoadDefaults()
 
   m_controller->LoadDefaults(g_controller_interface);
   m_controller->UpdateReferences(g_controller_interface);
+  SaveSettings();
+
   emit DefaultDeviceChanged();
   emit Update();
 }
@@ -61,6 +64,8 @@ void EmulatedControllerModel::SetDevice(const std::string& device)
     return;
 
   m_controller->SetDefaultDevice(std::move(devq));
+  SaveSettings();
+
   emit DefaultDeviceChanged();
 }
 
@@ -81,6 +86,8 @@ void EmulatedControllerModel::Clear()
     for (auto& boolean_setting : group->boolean_settings)
       boolean_setting->m_value = false;
   }
+
+  SaveSettings();
 
   Update();
 }
