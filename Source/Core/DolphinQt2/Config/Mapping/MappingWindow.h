@@ -34,6 +34,23 @@ private:
   QPushButton* m_refresh;
 };
 
+class ProfilesBox : public QGroupBox
+{
+public:
+  explicit ProfilesBox(EmulatedControllerModel* model);
+
+private:
+  void OnDeleteProfilePressed();
+  void OnLoadProfilePressed();
+  void OnSaveProfilePressed();
+
+  EmulatedControllerModel* m_model;
+  QComboBox* m_combo;
+  QPushButton* m_load;
+  QPushButton* m_save;
+  QPushButton* m_delete;
+};
+
 class MappingWindow final : public QDialog
 {
   Q_OBJECT
@@ -65,10 +82,6 @@ private:
 
   void AddWidget(const QString& name, QWidget* widget);
 
-  void OnDeleteProfilePressed();
-  void OnLoadProfilePressed();
-  void OnSaveProfilePressed();
-
   EmulatedControllerModel m_model;
 
   // Main
@@ -80,12 +93,7 @@ private:
   DevicesBox* m_devices_box;
 
   // Profiles
-  QGroupBox* m_profiles_box;
-  QHBoxLayout* m_profiles_layout;
-  QComboBox* m_profiles_combo;
-  QPushButton* m_profiles_load;
-  QPushButton* m_profiles_save;
-  QPushButton* m_profiles_delete;
+  ProfilesBox* m_profiles_box;
 
   // Reset
   QGroupBox* m_reset_box;

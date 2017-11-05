@@ -77,96 +77,77 @@ void DevicesBox::Update()
   }
 }
 
-MappingWindow::MappingWindow(QWidget* parent, Type type, int port_num) : QDialog(parent)
+ProfilesBox::ProfilesBox(EmulatedControllerModel* model) : QGroupBox(tr("Profile")), m_model(model)
 {
-  m_model.m_port = port_num;
+  // CreateWidgets
+  auto* layout = new QHBoxLayout();
 
-  setWindowTitle(tr("Port %1").arg(port_num + 1));
-  setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
-
-  CreateDevicesLayout();
-  CreateProfilesLayout();
-  CreateResetLayout();
-  CreateMainLayout();
-  ConnectWidgets();
-  SetMappingType(type);
-}
-
-void MappingWindow::CreateDevicesLayout()
-{
-  m_devices_box = new DevicesBox(&m_model);
-}
-
-void MappingWindow::CreateProfilesLayout()
-{
-  m_profiles_layout = new QHBoxLayout();
-  m_profiles_box = new QGroupBox(tr("Profile"));
-  m_profiles_combo = new QComboBox();
-  m_profiles_load = new QPushButton(tr("Load"));
-  m_profiles_save = new QPushButton(tr("Save"));
-  m_profiles_delete = new QPushButton(tr("Delete"));
+  m_combo = new QComboBox();
+  m_load = new QPushButton(tr("Load"));
+  m_save = new QPushButton(tr("Save"));
+  m_delete = new QPushButton(tr("Delete"));
 
   auto* button_layout = new QHBoxLayout();
 
-  m_profiles_box->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-  m_profiles_combo->setEditable(true);
+  setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+  m_combo->setEditable(true);
 
-  m_profiles_layout->addWidget(m_profiles_combo);
-  button_layout->addWidget(m_profiles_load);
-  button_layout->addWidget(m_profiles_save);
-  button_layout->addWidget(m_profiles_delete);
-  m_profiles_layout->addItem(button_layout);
+  layout->addWidget(m_combo);
+  button_layout->addWidget(m_load);
+  button_layout->addWidget(m_save);
+  button_layout->addWidget(m_delete);
+  layout->addItem(button_layout);
 
-  m_profiles_box->setLayout(m_profiles_layout);
+  setLayout(layout);
+
+  // ConnectWidgets
+  connect(m_save, &QPushButton::clicked, this, &ProfilesBox::OnSaveProfilePressed);
+  connect(m_load, &QPushButton::clicked, this, &ProfilesBox::OnLoadProfilePressed);
+  connect(m_delete, &QPushButton::clicked, this, &ProfilesBox::OnDeleteProfilePressed);
+
+  m_combo->addItem(QStringLiteral(""));
+
+  const std::string profiles_path =
+      File::GetUserPath(D_CONFIG_IDX) + "Profiles/" + m_model->GetConfig()->GetProfileName();
+  for (const auto& filename : Common::DoFileSearch({profiles_path}, {".ini"}))
+  {
+    std::string basename;
+    SplitPath(filename, nullptr, &basename, nullptr);
+    m_combo->addItem(QString::fromStdString(basename), QString::fromStdString(filename));
+  }
 }
 
-void MappingWindow::CreateResetLayout()
+void ProfilesBox::OnSaveProfilePressed()
 {
-  m_reset_layout = new QHBoxLayout();
-  m_reset_box = new QGroupBox(tr("Reset"));
-  m_reset_clear = new QPushButton(tr("Clear"));
-  m_reset_default = new QPushButton(tr("Default"));
+  const QString profile_name = m_combo->currentText();
+  const QString profile_path = m_combo->currentData().toString();
 
-  m_reset_box->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+  if (profile_name.isEmpty())
+    return;
 
-  m_reset_layout->addWidget(m_reset_default);
-  m_reset_layout->addWidget(m_reset_clear);
+  m_model->SaveProfile(profile_path.toStdString());
 
-  m_reset_box->setLayout(m_reset_layout);
+  if (m_combo->currentIndex() == 0)
+  {
+    m_combo->addItem(profile_name, profile_path);
+    m_combo->setCurrentIndex(m_combo->count() - 1);
+  }
 }
 
-void MappingWindow::CreateMainLayout()
+void ProfilesBox::OnLoadProfilePressed()
 {
-  m_main_layout = new QVBoxLayout();
-  m_config_layout = new QHBoxLayout();
-  m_tab_widget = new QTabWidget();
-  m_button_box = new QDialogButtonBox(QDialogButtonBox::Ok);
+  const QString profile_path = m_combo->currentData().toString();
 
-  m_config_layout->addWidget(m_devices_box);
-  m_config_layout->addWidget(m_reset_box);
-  m_config_layout->addWidget(m_profiles_box);
+  if (m_combo->currentIndex() == 0)
+    return;
 
-  m_main_layout->addItem(m_config_layout);
-  m_main_layout->addWidget(m_tab_widget);
-  m_main_layout->addWidget(m_button_box);
-
-  setLayout(m_main_layout);
+  m_model->LoadProfile(profile_path.toStdString());
 }
 
-void MappingWindow::ConnectWidgets()
+void ProfilesBox::OnDeleteProfilePressed()
 {
-  connect(m_reset_clear, &QPushButton::clicked, &m_model, &EmulatedControllerModel::Clear);
-  connect(m_reset_default, &QPushButton::clicked, &m_model, &EmulatedControllerModel::LoadDefaults);
-  connect(m_profiles_save, &QPushButton::clicked, this, &MappingWindow::OnSaveProfilePressed);
-  connect(m_profiles_load, &QPushButton::clicked, this, &MappingWindow::OnLoadProfilePressed);
-  connect(m_profiles_delete, &QPushButton::clicked, this, &MappingWindow::OnDeleteProfilePressed);
-  connect(m_button_box, &QDialogButtonBox::accepted, this, &MappingWindow::accept);
-}
-
-void MappingWindow::OnDeleteProfilePressed()
-{
-  const QString profile_name = m_profiles_combo->currentText();
-  const QString profile_path = m_profiles_combo->currentData().toString();
+  const QString profile_name = m_combo->currentText();
+  const QString profile_path = m_combo->currentData().toString();
 
   if (!File::Exists(profile_path.toStdString()))
   {
@@ -189,7 +170,7 @@ void MappingWindow::OnDeleteProfilePressed()
     return;
   }
 
-  m_profiles_combo->removeItem(m_profiles_combo->currentIndex());
+  m_combo->removeItem(m_combo->currentIndex());
 
   File::Delete(profile_path.toStdString());
 
@@ -198,33 +179,70 @@ void MappingWindow::OnDeleteProfilePressed()
   result.setText(tr("Successfully deleted '%1'.").arg(profile_name));
 }
 
-void MappingWindow::OnLoadProfilePressed()
+MappingWindow::MappingWindow(QWidget* parent, Type type, int port_num) : QDialog(parent)
 {
-  const QString profile_path = m_profiles_combo->currentData().toString();
+  m_model.m_port = port_num;
 
-  if (m_profiles_combo->currentIndex() == 0)
-    return;
+  setWindowTitle(tr("Port %1").arg(port_num + 1));
+  setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
 
-  m_model.LoadProfile(profile_path.toStdString());
-  // This refreshes devices because the default device changed!
-  RefreshDevices();
+  m_tab_widget = new QTabWidget();
+  SetMappingType(type);
+
+  CreateDevicesLayout();
+  CreateProfilesLayout();
+  CreateResetLayout();
+  CreateMainLayout();
+  ConnectWidgets();
 }
 
-void MappingWindow::OnSaveProfilePressed()
+void MappingWindow::CreateDevicesLayout()
 {
-  const QString profile_name = m_profiles_combo->currentText();
-  const QString profile_path = m_profiles_combo->currentData().toString();
+  m_devices_box = new DevicesBox(&m_model);
+}
 
-  if (profile_name.isEmpty())
-    return;
+void MappingWindow::CreateProfilesLayout()
+{
+  m_profiles_box = new ProfilesBox(&m_model);
+}
 
-  m_model.SaveProfile(profile_path.toStdString());
+void MappingWindow::CreateResetLayout()
+{
+  m_reset_layout = new QHBoxLayout();
+  m_reset_box = new QGroupBox(tr("Reset"));
+  m_reset_clear = new QPushButton(tr("Clear"));
+  m_reset_default = new QPushButton(tr("Default"));
 
-  if (m_profiles_combo->currentIndex() == 0)
-  {
-    m_profiles_combo->addItem(profile_name, profile_path);
-    m_profiles_combo->setCurrentIndex(m_profiles_combo->count() - 1);
-  }
+  m_reset_box->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+
+  m_reset_layout->addWidget(m_reset_default);
+  m_reset_layout->addWidget(m_reset_clear);
+
+  m_reset_box->setLayout(m_reset_layout);
+}
+
+void MappingWindow::CreateMainLayout()
+{
+  m_main_layout = new QVBoxLayout();
+  m_config_layout = new QHBoxLayout();
+  m_button_box = new QDialogButtonBox(QDialogButtonBox::Ok);
+
+  m_config_layout->addWidget(m_devices_box);
+  m_config_layout->addWidget(m_reset_box);
+  m_config_layout->addWidget(m_profiles_box);
+
+  m_main_layout->addItem(m_config_layout);
+  m_main_layout->addWidget(m_tab_widget);
+  m_main_layout->addWidget(m_button_box);
+
+  setLayout(m_main_layout);
+}
+
+void MappingWindow::ConnectWidgets()
+{
+  connect(m_reset_clear, &QPushButton::clicked, &m_model, &EmulatedControllerModel::Clear);
+  connect(m_reset_default, &QPushButton::clicked, &m_model, &EmulatedControllerModel::LoadDefaults);
+  connect(m_button_box, &QDialogButtonBox::accepted, this, &MappingWindow::accept);
 }
 
 void MappingWindow::SetMappingType(MappingWindow::Type type)
@@ -276,18 +294,6 @@ void MappingWindow::SetMappingType(MappingWindow::Type type)
   widget->LoadSettings();
 
   m_model.SetConfig(widget->GetConfig());
-  m_profiles_combo->addItem(QStringLiteral(""));
-
-  const std::string profiles_path =
-      File::GetUserPath(D_CONFIG_IDX) + "Profiles/" + m_model.GetConfig()->GetProfileName();
-  for (const auto& filename : Common::DoFileSearch({profiles_path}, {".ini"}))
-  {
-    std::string basename;
-    SplitPath(filename, nullptr, &basename, nullptr);
-    m_profiles_combo->addItem(QString::fromStdString(basename), QString::fromStdString(filename));
-  }
-
-  RefreshDevices();
 }
 
 void MappingWindow::AddWidget(const QString& name, QWidget* widget)
