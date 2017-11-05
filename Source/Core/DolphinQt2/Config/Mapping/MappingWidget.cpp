@@ -58,9 +58,6 @@ QGroupBox* MappingWidget::CreateGroupBox(const QString& name, ControllerEmu::Con
     auto* control_ref = control->control_ref.get();
 
     connect(button, &MappingButton::AdvancedPressed, [this, button, control_ref] {
-      if (m_parent->GetDevice() == nullptr)
-        return;
-
       IOWindow io(this, m_parent->GetController(), control_ref,
                   control_ref->IsInput() ? IOWindow::Type::Input : IOWindow::Type::Output);
       io.exec();

@@ -172,18 +172,21 @@ void IOWindow::OnDialogButtonPressed(QAbstractButton* button)
 
 void IOWindow::OnDetectButtonPressed()
 {
+  auto* device = g_controller_interface.FindDevice(m_devq).get();
+  if (!device)
+    return;
+
   installEventFilter(BlockUserInputFilter::Instance());
   grabKeyboard();
   grabMouse();
 
-  std::thread([this] {
+  std::thread([this, device] {
     auto* btn = m_type == IOWindow::Type::Input ? m_detect_button : m_test_button;
     const auto old_label = btn->text();
 
     btn->setText(QStringLiteral("..."));
 
-    const auto expr = MappingCommon::DetectExpression(
-        m_reference, g_controller_interface.FindDevice(m_devq).get(), m_devq);
+    const auto expr = MappingCommon::DetectExpression(m_reference, device, m_devq);
 
     btn->setText(old_label);
 
@@ -213,6 +216,8 @@ void IOWindow::UpdateOptionList()
   m_option_list->clear();
 
   const auto device = g_controller_interface.FindDevice(m_devq);
+  if (!device)
+    return;
 
   if (m_reference->IsInput())
   {
