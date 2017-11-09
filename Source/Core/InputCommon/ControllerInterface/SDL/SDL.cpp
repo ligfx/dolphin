@@ -64,7 +64,6 @@ static bool HandleEventAndContinue(const SDL_Event& e)
   if (e.type == SDL_JOYDEVICEADDED)
   {
     OpenAndAddDevice(e.jdevice.which);
-    g_controller_interface.InvokeHotplugCallbacks();
   }
   else if (e.type == SDL_JOYDEVICEREMOVED)
   {
@@ -72,7 +71,6 @@ static bool HandleEventAndContinue(const SDL_Event& e)
       const Joystick* joystick = dynamic_cast<const Joystick*>(device);
       return joystick && SDL_JoystickInstanceID(joystick->GetSDLJoystick()) == e.jdevice.which;
     });
-    g_controller_interface.InvokeHotplugCallbacks();
   }
   else if (e.type == s_populate_event_type)
   {
