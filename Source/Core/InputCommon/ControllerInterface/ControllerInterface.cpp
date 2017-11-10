@@ -72,7 +72,7 @@ void ControllerInterface::Initialize(void* const hwnd)
   ciface::evdev::Init();
 #endif
 #ifdef CIFACE_USE_PIPES
-// nothing needed
+  ciface::Pipes::Init();
 #endif
 
   m_is_init = true;
@@ -165,6 +165,9 @@ void ControllerInterface::Shutdown()
 #endif
 #ifdef CIFACE_USE_EVDEV
   ciface::evdev::Shutdown();
+#endif
+#ifdef CIFACE_USE_PIPES
+  ciface::Pipes::DeInit();
 #endif
 
   m_is_init = false;

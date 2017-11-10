@@ -22,7 +22,9 @@ namespace Pipes
 // SET {L, R} [0, 1]
 // SET {MAIN, C} [0, 1] [0, 1]
 
+void Init();
 void PopulateDevices();
+void DeInit();
 
 class PipeDevice : public Core::Device
 {

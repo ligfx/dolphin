@@ -11,10 +11,13 @@
 #include <sstream>
 #include <string>
 #include <sys/stat.h>
+#include <thread>
 #include <unistd.h>
+#include <unordered_set>
 #include <vector>
 
 #include "Common/FileUtil.h"
+#include "Common/Flag.h"
 #include "Common/MathUtil.h"
 #include "Common/StringUtil.h"
 #include "InputCommon/ControllerInterface/ControllerInterface.h"
@@ -41,27 +44,71 @@ static double StringToDouble(const std::string& text)
   return result;
 }
 
+static std::thread s_thread;
+static Common::Flag s_stop_flag;
+static std::map<std::string, std::shared_ptr<PipeDevice>> s_open_pipes;
+
+void Init()
+{
+  s_thread = std::thread([] {
+    while (!s_stop_flag.IsSet())
+    {
+      // Search the Pipes directory for files that we can open in read-only,
+      // non-blocking mode. The device name is the virtual name of the file.
+      File::FSTEntry fst{};
+      std::string dir_path = File::GetUserPath(D_PIPES_IDX);
+      if (File::Exists(dir_path))
+        fst = File::ScanDirectoryTree(dir_path, false);
+
+      std::unordered_set<std::string> unseen_paths;
+      for (const auto& it : s_open_pipes)
+      {
+        unseen_paths.emplace(it.first);
+      }
+
+      for (const auto& child : fst.children)
+      {
+        if (child.isDirectory)
+          continue;
+
+        unseen_paths.erase(child.physicalName);
+
+        if (s_open_pipes.find(child.physicalName) != s_open_pipes.cend())
+          continue;
+
+        int fd = open(child.physicalName.c_str(), O_RDONLY | O_NONBLOCK);
+        if (fd < 0)
+          continue;
+
+        auto dev = std::make_shared<PipeDevice>(fd, child.virtualName);
+        s_open_pipes[child.physicalName] = dev;
+        g_controller_interface.AddDevice(std::move(dev));
+      }
+
+      for (const auto& unseen : unseen_paths)
+      {
+        g_controller_interface.RemoveDevice(
+            [&](const auto* dev) { return dev == s_open_pipes[unseen].get(); });
+        s_open_pipes.erase(unseen);
+      }
+
+      std::this_thread::sleep_for(std::chrono::seconds(1));
+    }
+  });
+}
+
 void PopulateDevices()
 {
-  // Search the Pipes directory for files that we can open in read-only,
-  // non-blocking mode. The device name is the virtual name of the file.
-  File::FSTEntry fst;
-  std::string dir_path = File::GetUserPath(D_PIPES_IDX);
-  if (!File::Exists(dir_path))
-    return;
-  fst = File::ScanDirectoryTree(dir_path, false);
-  if (!fst.isDirectory)
-    return;
-  for (unsigned int i = 0; i < fst.size; ++i)
+}
+
+void DeInit()
+{
+  if (s_thread.joinable())
   {
-    const File::FSTEntry& child = fst.children[i];
-    if (child.isDirectory)
-      continue;
-    int fd = open(child.physicalName.c_str(), O_RDONLY | O_NONBLOCK);
-    if (fd < 0)
-      continue;
-    g_controller_interface.AddDevice(std::make_shared<PipeDevice>(fd, child.virtualName));
+    s_stop_flag.Set();
+    s_thread.join();
   }
+  s_open_pipes = {};
 }
 
 PipeDevice::PipeDevice(int fd, const std::string& name) : m_fd(fd), m_name(name)
