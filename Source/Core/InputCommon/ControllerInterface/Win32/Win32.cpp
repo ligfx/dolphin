@@ -26,7 +26,6 @@ static LRESULT CALLBACK WindowProc(HWND hwnd, UINT message, WPARAM wparam, LPARA
   {
     ciface::DInput::PopulateDevices(s_hwnd);
     ciface::XInput::PopulateDevices();
-    g_controller_interface.InvokeHotplugCallbacks();
   }
 
   return DefWindowProc(hwnd, message, wparam, lparam);
