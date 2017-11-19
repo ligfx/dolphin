@@ -9,12 +9,10 @@
 #include "Core/ConfigManager.h"
 #include "Core/Host.h"
 
-#include "InputCommon/ControllerEmu/ControlReference/ControlReference.h"
+#include "InputCommon/ControlReference/ControlReference.h"
 
-using namespace ControllerEmu::ExpressionParser;
+using namespace ciface::ExpressionParser;
 
-namespace ControllerEmu
-{
 constexpr ControlState INPUT_DETECT_THRESHOLD = 0.55;
 
 bool ControlReference::InputGateOn()
@@ -65,16 +63,15 @@ ControlReference::ControlReference() : range(1), m_parsed_expression(nullptr)
 {
 }
 
-ControlReference::ControlReference(const std::string& name_, const std::string& ui_name_)
-    : name(name_), ui_name(ui_name_)
-{
-}
-
-ControlReference::ControlReference(const std::string& name_) : ControlReference(name_, name_)
-{
-}
-
 ControlReference::~ControlReference() = default;
+
+InputReference::InputReference() : ControlReference()
+{
+}
+
+OutputReference::OutputReference() : ControlReference()
+{
+}
 
 bool InputReference::IsInput() const
 {
@@ -195,5 +192,3 @@ ciface::Core::Device::Control* OutputReference::Detect(const unsigned int ms,
   }
   return nullptr;
 }
-
-}  // namespace ControllerEmu

@@ -25,6 +25,7 @@
 
 #include "InputCommon/ControllerInterface/Device.h"
 
+class ControlReference;
 class DolphinSlider;
 class InputConfig;
 class InputConfigDialog;
@@ -38,7 +39,6 @@ namespace ControllerEmu
 {
 class BooleanSetting;
 class ControlGroup;
-class ControlReference;
 class EmulatedController;
 class Extension;
 class NumericSetting;
@@ -105,14 +105,13 @@ private:
 class ControlDialog : public wxDialog
 {
 public:
-  ControlDialog(InputConfigDialog* const parent, InputConfig& config,
-                ControllerEmu::ControlReference* const ref);
+  ControlDialog(InputConfigDialog* const parent, InputConfig& config, ControlReference* const ref);
 
   bool Validate() override;
 
   int GetRangeSliderValue() const;
 
-  ControllerEmu::ControlReference* const control_reference;
+  ControlReference* const control_reference;
   InputConfig& m_config;
 
 private:
@@ -156,10 +155,10 @@ public:
 class ControlButton : public wxButton
 {
 public:
-  ControlButton(wxWindow* const parent, ControllerEmu::ControlReference* const _ref,
-                const std::string& name, const unsigned int width, const std::string& label = {});
+  ControlButton(wxWindow* const parent, ControlReference* const _ref, const std::string& name,
+                const unsigned int width, const std::string& label = {});
 
-  ControllerEmu::ControlReference* const control_reference;
+  ControlReference* const control_reference;
   const std::string m_name;
 
 protected:

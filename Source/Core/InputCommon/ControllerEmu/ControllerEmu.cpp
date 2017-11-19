@@ -10,9 +10,10 @@
 
 #include "Common/IniFile.h"
 
+#include "InputCommon/ControlReference/ControlReference.h"
+#include "InputCommon/ControllerEmu/Control/Control.h"
 #include "InputCommon/ControllerEmu/ControlGroup/ControlGroup.h"
 #include "InputCommon/ControllerEmu/ControlGroup/Extension.h"
-#include "InputCommon/ControllerEmu/ControlReference/ControlReference.h"
 #include "InputCommon/ControllerInterface/ControllerInterface.h"
 
 namespace ControllerEmu
@@ -38,7 +39,7 @@ void EmulatedController::UpdateReferences(const ControllerInterface& devi)
   for (auto& ctrlGroup : groups)
   {
     for (auto& control : ctrlGroup->controls)
-      control->UpdateReference(devi, GetDefaultDevice());
+      control->control_ref.get()->UpdateReference(devi, GetDefaultDevice());
 
     // extension
     if (ctrlGroup->type == GroupType::Extension)

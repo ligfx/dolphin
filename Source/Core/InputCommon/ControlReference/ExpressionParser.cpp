@@ -11,11 +11,11 @@
 #include <vector>
 
 #include "Common/StringUtil.h"
-#include "InputCommon/ControllerEmu/ControlReference/ExpressionParser.h"
+#include "InputCommon/ControlReference/ExpressionParser.h"
 
 using namespace ciface::Core;
 
-namespace ControllerEmu
+namespace ciface
 {
 namespace ExpressionParser
 {

@@ -58,10 +58,11 @@
 #include "DolphinWX/UINeedsControllerState.h"
 #include "DolphinWX/WxUtils.h"
 
+#include "InputCommon/ControlReference/ControlReference.h"
+#include "InputCommon/ControlReference/ExpressionParser.h"
+#include "InputCommon/ControllerEmu/Control/Control.h"
 #include "InputCommon/ControllerEmu/ControlGroup/ControlGroup.h"
 #include "InputCommon/ControllerEmu/ControlGroup/Extension.h"
-#include "InputCommon/ControllerEmu/ControlReference/ControlReference.h"
-#include "InputCommon/ControllerEmu/ControlReference/ExpressionParser.h"
 #include "InputCommon/ControllerEmu/ControllerEmu.h"
 #include "InputCommon/ControllerEmu/Setting/BooleanSetting.h"
 #include "InputCommon/ControllerEmu/Setting/NumericSetting.h"
@@ -69,7 +70,7 @@
 #include "InputCommon/ControllerInterface/Device.h"
 #include "InputCommon/InputConfig.h"
 
-using ControllerEmu::ExpressionParser::ParseStatus;
+using ciface::ExpressionParser::ParseStatus;
 
 void InputConfigDialog::ConfigExtension(wxCommandEvent& event)
 {
@@ -192,7 +193,7 @@ void PadSettingSpin::UpdateValue()
 }
 
 ControlDialog::ControlDialog(InputConfigDialog* const parent, InputConfig& config,
-                             ControllerEmu::ControlReference* const ref)
+                             ControlReference* const ref)
     : wxDialog(parent, wxID_ANY, _("Configure Control"), wxDefaultPosition, wxDefaultSize,
                wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER),
       control_reference(ref), m_config(config), m_parent(parent)
@@ -235,7 +236,7 @@ ExtensionButton::ExtensionButton(wxWindow* const parent, ControllerEmu::Extensio
 {
 }
 
-ControlButton::ControlButton(wxWindow* const parent, ControllerEmu::ControlReference* const _ref,
+ControlButton::ControlButton(wxWindow* const parent, ControlReference* const _ref,
                              const std::string& name, const unsigned int width,
                              const std::string& label)
     : wxButton(parent, wxID_ANY), control_reference(_ref), m_name(name),
@@ -967,7 +968,7 @@ ControlGroupBox::ControlGroupBox(ControllerEmu::ControlGroup* const group, wxWin
         new wxStaticText(parent, wxID_ANY, wxGetTranslation(StrToWxStr(control->ui_name)));
 
     ControlButton* const control_button =
-        new ControlButton(parent, control.get(), control->ui_name, 80);
+        new ControlButton(parent, control->control_ref.get(), control->ui_name, 80);
     control_button->SetFont(small_font);
 
     control_buttons.push_back(control_button);
@@ -977,7 +978,7 @@ ControlGroupBox::ControlGroupBox(ControllerEmu::ControlGroup* const group, wxWin
             exclude_buttons.end())
       eventsink->control_buttons.push_back(control_button);
 
-    if (control->IsInput())
+    if (control->control_ref->IsInput())
     {
       control_button->SetToolTip(
           _("Left-click to detect input.\nMiddle-click to clear.\nRight-click for more options."));

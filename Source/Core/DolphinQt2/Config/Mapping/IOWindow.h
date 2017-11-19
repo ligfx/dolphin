@@ -10,6 +10,7 @@
 #include "Common/Flag.h"
 #include "InputCommon/ControllerInterface/Device.h"
 
+class ControlReference;
 class QAbstractButton;
 class QComboBox;
 class QDialogButtonBox;
@@ -23,7 +24,6 @@ class QSpinBox;
 
 namespace ControllerEmu
 {
-class ControlReference;
 class EmulatedController;
 }
 
@@ -38,7 +38,7 @@ public:
   };
 
   explicit IOWindow(QWidget* parent, ControllerEmu::EmulatedController* m_controller,
-                    ControllerEmu::ControlReference* ref, Type type);
+                    ControlReference* ref, Type type);
 
 private:
   void CreateMainLayout();
@@ -88,7 +88,7 @@ private:
   QPushButton* m_clear_button;
   QPushButton* m_apply_button;
 
-  ControllerEmu::ControlReference* m_reference;
+  ControlReference* m_reference;
   ControllerEmu::EmulatedController* m_controller;
 
   ciface::Core::DeviceQualifier m_devq;
