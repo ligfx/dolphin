@@ -337,3 +337,22 @@ void FifoDataFile::ReadMemoryUpdates(u64 fileOffset, u32 numUpdates,
     file.ReadBytes(dstUpdate.data.data(), srcUpdate.dataSize);
   }
 }
+
+size_t FifoDataFile::GetFifoDataBytes() const
+{
+  size_t fifo_bytes = 0;
+  for (u32 i = 0; i < GetFrameCount(); ++i)
+    fifo_bytes += GetFrame(i).fifoData.size();
+  return fifo_bytes;
+}
+
+size_t FifoDataFile::GetMemoryUpdatesBytes() const
+{
+  size_t mem_bytes = 0;
+  for (u32 i = 0; i < GetFrameCount(); ++i)
+  {
+    for (const auto& mem_update : GetFrame(i).memoryUpdates)
+      mem_bytes += mem_update.data.size();
+  }
+  return mem_bytes;
+}

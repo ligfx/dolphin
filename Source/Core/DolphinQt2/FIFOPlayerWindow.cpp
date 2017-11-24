@@ -223,18 +223,9 @@ void FIFOPlayerWindow::Update()
     if (is_recording_done)
     {
       FifoDataFile* file = FifoRecorder::GetInstance().GetRecordedFile();
-      size_t fifo_bytes = 0;
-      size_t mem_bytes = 0;
-
-      for (u32 i = 0; i < file->GetFrameCount(); ++i)
-      {
-        fifo_bytes += file->GetFrame(i).fifoData.size();
-        for (const auto& mem_update : file->GetFrame(i).memoryUpdates)
-          mem_bytes += mem_update.data.size();
-      }
-
       return tr("%1 FIFO bytes\n%2 memory bytes\n%3 frames")
-          .arg(QString::number(fifo_bytes), QString::number(mem_bytes),
+          .arg(QString::number(file->GetFifoDataBytes()),
+               QString::number(file->GetMemoryUpdatesBytes()),
                QString::number(file->GetFrameCount()));
     }
 

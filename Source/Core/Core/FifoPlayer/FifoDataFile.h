@@ -70,6 +70,8 @@ public:
   void AddFrame(const FifoFrameInfo& frameInfo);
   const FifoFrameInfo& GetFrame(u32 frame) const { return m_Frames[frame]; }
   u32 GetFrameCount() const { return static_cast<u32>(m_Frames.size()); }
+  size_t GetFifoDataBytes() const;
+  size_t GetMemoryUpdatesBytes() const;
   bool Save(const std::string& filename);
 
   static std::unique_ptr<FifoDataFile> Load(const std::string& filename, bool flagsOnly);
