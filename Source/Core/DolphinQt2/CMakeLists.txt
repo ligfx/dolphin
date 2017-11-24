@@ -88,6 +88,7 @@ set(SRCS
   QtUtils/ClickEventFilter.cpp
   QtUtils/ElidedButton.cpp
   QtUtils/ListTabWidget.cpp
+  QtUtils/SpinBoxRangePair.cpp
   QtUtils/VerticalScrollArea.cpp
   QtUtils/WindowActivationEventFilter.cpp
   Settings/AdvancedPane.cpp

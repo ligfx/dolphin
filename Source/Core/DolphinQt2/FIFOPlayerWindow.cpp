@@ -24,6 +24,7 @@
 #include "Core/FifoPlayer/FifoRecorder.h"
 
 #include "DolphinQt2/QtUtils/QueueOnObject.h"
+#include "DolphinQt2/QtUtils/SpinBoxRangePair.h"
 #include "DolphinQt2/Settings.h"
 
 FIFOPlayerWindow::FIFOPlayerWindow(QWidget* parent) : QDialog(parent)
@@ -76,33 +77,15 @@ void FIFOPlayerWindow::CreateWidgets()
 
   // Object Range
   auto* object_range_group = new QGroupBox(tr("Object Range"));
-  auto* object_range_layout = new QHBoxLayout;
-
-  m_object_range_from = new QSpinBox;
-  m_object_range_from_label = new QLabel(tr("From:"));
-  m_object_range_to = new QSpinBox;
-  m_object_range_to_label = new QLabel(tr("To:"));
-
-  object_range_layout->addWidget(m_object_range_from_label);
-  object_range_layout->addWidget(m_object_range_from);
-  object_range_layout->addWidget(m_object_range_to_label);
-  object_range_layout->addWidget(m_object_range_to);
-  object_range_group->setLayout(object_range_layout);
+  m_object_range = new SpinBoxRangePair(tr("From:"), tr("To:"));
+  object_range_group->setLayout(new QHBoxLayout);
+  object_range_group->layout()->addWidget(m_object_range);
 
   // Frame Range
   auto* frame_range_group = new QGroupBox(tr("Frame Range"));
-  auto* frame_range_layout = new QHBoxLayout;
-
-  m_frame_range_from = new QSpinBox;
-  m_frame_range_from_label = new QLabel(tr("From:"));
-  m_frame_range_to = new QSpinBox;
-  m_frame_range_to_label = new QLabel(tr("To:"));
-
-  frame_range_layout->addWidget(m_frame_range_from_label);
-  frame_range_layout->addWidget(m_frame_range_from);
-  frame_range_layout->addWidget(m_frame_range_to_label);
-  frame_range_layout->addWidget(m_frame_range_to);
-  frame_range_group->setLayout(frame_range_layout);
+  m_frame_range = new SpinBoxRangePair(tr("From:"), tr("To:"));
+  frame_range_group->setLayout(new QHBoxLayout);
+  frame_range_group->layout()->addWidget(m_frame_range);
 
   // Playback Options
   auto* playback_group = new QGroupBox(tr("Playback Options"));
@@ -153,15 +136,17 @@ void FIFOPlayerWindow::ConnectWidgets()
   connect(m_button_box, &QDialogButtonBox::rejected, this, &FIFOPlayerWindow::reject);
   connect(m_early_memory_updates, &QCheckBox::toggled, this,
           &FIFOPlayerWindow::OnEarlyMemoryUpdatesChanged);
-  connect(m_frame_range_from, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this,
-          &FIFOPlayerWindow::OnLimitsChanged);
-  connect(m_frame_range_to, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this,
-          &FIFOPlayerWindow::OnLimitsChanged);
 
-  connect(m_object_range_from, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this,
-          &FIFOPlayerWindow::OnLimitsChanged);
-  connect(m_object_range_to, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this,
-          &FIFOPlayerWindow::OnLimitsChanged);
+  connect(m_frame_range, &SpinBoxRangePair::ValuesChanged, [](int range_start, int range_end) {
+    FifoPlayer& player = FifoPlayer::GetInstance();
+    player.SetFrameRangeStart(range_start);
+    player.SetFrameRangeEnd(range_end);
+  });
+  connect(m_object_range, &SpinBoxRangePair::ValuesChanged, [](int range_start, int range_end) {
+    FifoPlayer& player = FifoPlayer::GetInstance();
+    player.SetObjectRangeStart(range_start);
+    player.SetObjectRangeEnd(range_end);
+  });
 }
 
 void FIFOPlayerWindow::LoadRecording()
@@ -279,14 +264,13 @@ void FIFOPlayerWindow::OnFIFOLoaded()
   auto object_count = FifoPlayer::GetInstance().GetFrameObjectCount();
   auto frame_count = file->GetFrameCount();
 
-  m_frame_range_to->setMaximum(frame_count);
-  m_object_range_to->setMaximum(object_count);
+  m_frame_range->SetMaximumRangeEnd(frame_count);
+  m_object_range->SetMaximumRangeEnd(object_count);
 
-  m_frame_range_to->setValue(frame_count);
-  m_object_range_to->setValue(object_count);
+  m_frame_range->SetRangeEnd(frame_count);
+  m_object_range->SetRangeEnd(object_count);
 
   UpdateInfo();
-  UpdateLimits();
   UpdateControls();
 }
 
@@ -295,39 +279,14 @@ void FIFOPlayerWindow::OnEarlyMemoryUpdatesChanged(bool enabled)
   FifoPlayer::GetInstance().SetEarlyMemoryUpdates(enabled);
 }
 
-void FIFOPlayerWindow::OnLimitsChanged()
-{
-  FifoPlayer& player = FifoPlayer::GetInstance();
-
-  player.SetFrameRangeStart(m_frame_range_from->value());
-  player.SetFrameRangeEnd(m_frame_range_to->value());
-  player.SetObjectRangeStart(m_object_range_from->value());
-  player.SetObjectRangeEnd(m_object_range_to->value());
-  UpdateLimits();
-}
-
-void FIFOPlayerWindow::UpdateLimits()
-{
-  m_frame_range_from->setMaximum(std::max(m_frame_range_to->value() - 1, 0));
-  m_frame_range_to->setMinimum(m_frame_range_from->value() + 1);
-  m_object_range_from->setMaximum(std::max(m_object_range_to->value() - 1, 0));
-  m_object_range_to->setMinimum(m_object_range_from->value() + 1);
-}
-
 void FIFOPlayerWindow::UpdateControls()
 {
   bool running = Core::IsRunning();
   bool is_recording = FifoRecorder::GetInstance().IsRecording();
   bool is_playing = FifoPlayer::GetInstance().IsPlaying();
 
-  m_frame_range_from->setEnabled(is_playing);
-  m_frame_range_from_label->setEnabled(is_playing);
-  m_frame_range_to->setEnabled(is_playing);
-  m_frame_range_to_label->setEnabled(is_playing);
-  m_object_range_from->setEnabled(is_playing);
-  m_object_range_from_label->setEnabled(is_playing);
-  m_object_range_to->setEnabled(is_playing);
-  m_object_range_to_label->setEnabled(is_playing);
+  m_frame_range->SetEnabled(is_playing);
+  m_object_range->SetEnabled(is_playing);
 
   m_early_memory_updates->setEnabled(is_playing);
 

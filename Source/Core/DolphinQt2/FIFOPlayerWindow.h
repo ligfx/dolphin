@@ -11,6 +11,7 @@ class QDialogButtonBox;
 class QLabel;
 class QPushButton;
 class QSpinBox;
+class SpinBoxRangePair;
 
 class FIFOPlayerWindow : public QDialog
 {
@@ -33,30 +34,22 @@ private:
 
   void OnEmulationStarted();
   void OnEmulationStopped();
-  void OnLimitsChanged();
   void OnEarlyMemoryUpdatesChanged(bool enabled);
   void OnRecordingDone();
   void OnFIFOLoaded();
 
   void UpdateControls();
   void UpdateInfo();
-  void UpdateLimits();
 
   QLabel* m_info_label;
   QPushButton* m_load;
   QPushButton* m_save;
   QPushButton* m_record;
   QPushButton* m_stop;
-  QSpinBox* m_frame_range_from;
-  QLabel* m_frame_range_from_label;
-  QSpinBox* m_frame_range_to;
-  QLabel* m_frame_range_to_label;
+  SpinBoxRangePair* m_frame_range;
   QSpinBox* m_frame_record_count;
   QLabel* m_frame_record_count_label;
-  QSpinBox* m_object_range_from;
-  QLabel* m_object_range_from_label;
-  QSpinBox* m_object_range_to;
-  QLabel* m_object_range_to_label;
+  SpinBoxRangePair* m_object_range;
   QCheckBox* m_early_memory_updates;
   QDialogButtonBox* m_button_box;
 };

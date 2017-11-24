@@ -102,6 +102,7 @@
     <QtMoc Include="NetPlay\NetPlaySetupDialog.h" />
     <QtMoc Include="NetPlay\PadMappingDialog.h" />
     <QtMoc Include="QtUtils\ClickEventFilter.h" />
+    <QtMoc Include="QtUtils\SpinBoxRangePair.h" />
     <QtMoc Include="QtUtils\WindowActivationEventFilter.h" />
     <QtMoc Include="RenderWidget.h" />
     <QtMoc Include="Settings.h" />
@@ -158,6 +159,7 @@
     <ClCompile Include="$(QtMocOutPrefix)Settings.cpp" />
     <ClCompile Include="$(QtMocOutPrefix)SettingsWindow.cpp" />
     <ClCompile Include="$(QtMocOutPrefix)SoftwareRendererWidget.cpp" />
+    <ClCompile Include="$(QtMocOutPrefix)SpinBoxRangePair.cpp" />
     <ClCompile Include="$(QtMocOutPrefix)ToolBar.cpp" />
     <ClCompile Include="AboutDialog.cpp" />
     <ClCompile Include="Config\CheatWarningWidget.cpp" />
@@ -220,6 +222,7 @@
     <ClCompile Include="QtUtils\ClickEventFilter.cpp" />
     <ClCompile Include="QtUtils\ElidedButton.cpp" />
     <ClCompile Include="QtUtils\ListTabWidget.cpp" />
+    <ClCompile Include="QtUtils\SpinBoxRangePair.cpp" />
     <ClCompile Include="QtUtils\VerticalScrollArea.cpp" />
     <ClCompile Include="QtUtils\WindowActivationEventFilter.cpp" />
     <ClCompile Include="RenderWidget.cpp" />
