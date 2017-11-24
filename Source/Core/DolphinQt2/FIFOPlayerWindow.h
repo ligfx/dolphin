@@ -32,14 +32,10 @@ private:
   void StartRecording();
   void StopRecording();
 
-  void OnEmulationStarted();
-  void OnEmulationStopped();
   void OnEarlyMemoryUpdatesChanged(bool enabled);
-  void OnRecordingDone();
   void OnFIFOLoaded();
 
-  void UpdateControls();
-  void UpdateInfo();
+  void Update();
 
   QLabel* m_info_label;
   QPushButton* m_load;

@@ -34,24 +34,19 @@ FIFOPlayerWindow::FIFOPlayerWindow(QWidget* parent) : QDialog(parent)
   CreateWidgets();
   ConnectWidgets();
 
-  UpdateInfo();
-
-  UpdateControls();
+  Update();
 
   FifoPlayer::GetInstance().SetFileLoadedCallback(
       [this] { QueueOnObject(this, &FIFOPlayerWindow::OnFIFOLoaded); });
-  FifoPlayer::GetInstance().SetFrameWrittenCallback([this] {
-    QueueOnObject(this, [this] {
-      UpdateInfo();
-      UpdateControls();
-    });
-  });
+  FifoPlayer::GetInstance().SetFrameWrittenCallback(
+      [this] { QueueOnObject(this, &FIFOPlayerWindow::Update); });
 
   connect(&Settings::Instance(), &Settings::EmulationStateChanged, this, [this](Core::State state) {
-    if (state == Core::State::Running)
-      OnEmulationStarted();
-    else if (state == Core::State::Uninitialized)
-      OnEmulationStopped();
+    // If we have previously been recording, stop now.
+    if (state == Core::State::Uninitialized && FifoRecorder::GetInstance().IsRecording())
+      StopRecording();
+
+    Update();
   });
 }
 
@@ -179,82 +174,75 @@ void FIFOPlayerWindow::SaveRecording()
 void FIFOPlayerWindow::StartRecording()
 {
   // Start recording
-  FifoRecorder::GetInstance().StartRecording(m_frame_record_count->value(), [this] {
-    QueueOnObject(this, [this] { OnRecordingDone(); });
-  });
-
-  UpdateControls();
-
-  UpdateInfo();
+  FifoRecorder::GetInstance().StartRecording(
+      m_frame_record_count->value(), [this] { QueueOnObject(this, &FIFOPlayerWindow::Update); });
+  Update();
 }
 
 void FIFOPlayerWindow::StopRecording()
 {
   FifoRecorder::GetInstance().StopRecording();
-
-  UpdateControls();
-  UpdateInfo();
+  Update();
 }
 
-void FIFOPlayerWindow::OnEmulationStarted()
+void FIFOPlayerWindow::Update()
 {
-  UpdateControls();
-}
+  bool is_running = Core::IsRunning();
+  bool is_recording = FifoRecorder::GetInstance().IsRecording();
+  bool is_recording_done = FifoRecorder::GetInstance().IsRecordingDone();
+  bool is_playing = FifoPlayer::GetInstance().IsPlaying();
 
-void FIFOPlayerWindow::OnEmulationStopped()
-{
-  // If we have previously been recording, stop now.
-  if (FifoRecorder::GetInstance().IsRecording())
-    StopRecording();
+  m_frame_range->SetEnabled(is_playing);
+  m_object_range->SetEnabled(is_playing);
 
-  UpdateControls();
-}
+  m_early_memory_updates->setEnabled(is_playing);
 
-void FIFOPlayerWindow::OnRecordingDone()
-{
-  UpdateInfo();
-  UpdateControls();
-}
+  bool enable_frame_record_count = !is_playing && !is_recording;
 
-void FIFOPlayerWindow::UpdateInfo()
-{
-  if (FifoPlayer::GetInstance().IsPlaying())
-  {
-    FifoDataFile* file = FifoPlayer::GetInstance().GetFile();
-    m_info_label->setText(
-        tr("%1 frame(s)\n%2 object(s)\nCurrent Frame: %3")
-            .arg(QString::number(file->GetFrameCount()),
-                 QString::number(FifoPlayer::GetInstance().GetFrameObjectCount()),
-                 QString::number(FifoPlayer::GetInstance().GetCurrentFrameNum())));
-    return;
-  }
+  m_frame_record_count_label->setEnabled(enable_frame_record_count);
+  m_frame_record_count->setEnabled(enable_frame_record_count);
 
-  if (FifoRecorder::GetInstance().IsRecordingDone())
-  {
-    FifoDataFile* file = FifoRecorder::GetInstance().GetRecordedFile();
-    size_t fifo_bytes = 0;
-    size_t mem_bytes = 0;
+  m_load->setEnabled(!is_running);
+  m_record->setEnabled(is_running && !is_playing);
 
-    for (u32 i = 0; i < file->GetFrameCount(); ++i)
+  m_stop->setVisible(is_running && is_recording);
+  m_record->setVisible(!m_stop->isVisible());
+
+  m_save->setEnabled(is_recording_done);
+
+  m_info_label->setText([&] {
+    if (is_playing)
     {
-      fifo_bytes += file->GetFrame(i).fifoData.size();
-      for (const auto& mem_update : file->GetFrame(i).memoryUpdates)
-        mem_bytes += mem_update.data.size();
+      FifoDataFile* file = FifoPlayer::GetInstance().GetFile();
+      return tr("%1 frame(s)\n%2 object(s)\nCurrent Frame: %3")
+          .arg(QString::number(file->GetFrameCount()),
+               QString::number(FifoPlayer::GetInstance().GetFrameObjectCount()),
+               QString::number(FifoPlayer::GetInstance().GetCurrentFrameNum()));
     }
 
-    m_info_label->setText(tr("%1 FIFO bytes\n%2 memory bytes\n%3 frames")
-                              .arg(QString::number(fifo_bytes), QString::number(mem_bytes),
-                                   QString::number(file->GetFrameCount())));
-    return;
-  }
+    if (is_recording_done)
+    {
+      FifoDataFile* file = FifoRecorder::GetInstance().GetRecordedFile();
+      size_t fifo_bytes = 0;
+      size_t mem_bytes = 0;
 
-  if (Core::IsRunning() && FifoRecorder::GetInstance().IsRecording())
-  {
-    m_info_label->setText(tr("Recording..."));
-    return;
-  }
+      for (u32 i = 0; i < file->GetFrameCount(); ++i)
+      {
+        fifo_bytes += file->GetFrame(i).fifoData.size();
+        for (const auto& mem_update : file->GetFrame(i).memoryUpdates)
+          mem_bytes += mem_update.data.size();
+      }
 
-  m_info_label->setText(tr("No file loaded / recorded."));
+      return tr("%1 FIFO bytes\n%2 memory bytes\n%3 frames")
+          .arg(QString::number(fifo_bytes), QString::number(mem_bytes),
+               QString::number(file->GetFrameCount()));
+    }
+
+    if (is_running && is_recording)
+      return tr("Recording...");
+
+    return tr("No file loaded / recorded.");
+  }());
 }
 
 void FIFOPlayerWindow::OnFIFOLoaded()
@@ -270,36 +258,10 @@ void FIFOPlayerWindow::OnFIFOLoaded()
   m_frame_range->SetRangeEnd(frame_count);
   m_object_range->SetRangeEnd(object_count);
 
-  UpdateInfo();
-  UpdateControls();
+  Update();
 }
 
 void FIFOPlayerWindow::OnEarlyMemoryUpdatesChanged(bool enabled)
 {
   FifoPlayer::GetInstance().SetEarlyMemoryUpdates(enabled);
-}
-
-void FIFOPlayerWindow::UpdateControls()
-{
-  bool running = Core::IsRunning();
-  bool is_recording = FifoRecorder::GetInstance().IsRecording();
-  bool is_playing = FifoPlayer::GetInstance().IsPlaying();
-
-  m_frame_range->SetEnabled(is_playing);
-  m_object_range->SetEnabled(is_playing);
-
-  m_early_memory_updates->setEnabled(is_playing);
-
-  bool enable_frame_record_count = !is_playing && !is_recording;
-
-  m_frame_record_count_label->setEnabled(enable_frame_record_count);
-  m_frame_record_count->setEnabled(enable_frame_record_count);
-
-  m_load->setEnabled(!running);
-  m_record->setEnabled(running && !is_playing);
-
-  m_stop->setVisible(running && is_recording);
-  m_record->setVisible(!m_stop->isVisible());
-
-  m_save->setEnabled(FifoRecorder::GetInstance().IsRecordingDone());
 }
