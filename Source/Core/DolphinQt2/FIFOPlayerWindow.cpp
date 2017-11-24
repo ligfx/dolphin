@@ -129,8 +129,11 @@ void FIFOPlayerWindow::ConnectWidgets()
   connect(m_record, &QPushButton::pressed, this, &FIFOPlayerWindow::StartRecording);
   connect(m_stop, &QPushButton::pressed, this, &FIFOPlayerWindow::StopRecording);
   connect(m_button_box, &QDialogButtonBox::rejected, this, &FIFOPlayerWindow::reject);
-  connect(m_early_memory_updates, &QCheckBox::toggled, this,
-          &FIFOPlayerWindow::OnEarlyMemoryUpdatesChanged);
+
+  connect(m_early_memory_updates, &QCheckBox::toggled, [](bool checked) {
+    FifoPlayer& player = FifoPlayer::GetInstance();
+    player.SetEarlyMemoryUpdates(checked);
+  });
 
   connect(m_frame_range, &SpinBoxRangePair::ValuesChanged, [](int range_start, int range_end) {
     FifoPlayer& player = FifoPlayer::GetInstance();
@@ -250,9 +253,4 @@ void FIFOPlayerWindow::OnFIFOLoaded()
   m_object_range->SetRangeEnd(object_count);
 
   Update();
-}
-
-void FIFOPlayerWindow::OnEarlyMemoryUpdatesChanged(bool enabled)
-{
-  FifoPlayer::GetInstance().SetEarlyMemoryUpdates(enabled);
 }

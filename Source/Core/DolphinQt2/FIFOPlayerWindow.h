@@ -32,7 +32,6 @@ private:
   void StartRecording();
   void StopRecording();
 
-  void OnEarlyMemoryUpdatesChanged(bool enabled);
   void OnFIFOLoaded();
 
   void Update();
