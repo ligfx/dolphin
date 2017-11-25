@@ -12,7 +12,11 @@ fi
 REQUIRED_CLANG_FORMAT_MAJOR=3
 REQUIRED_CLANG_FORMAT_MINOR=8
 
-if ! [ -x "$(command -v clang-format)" ]; then
+CLANG_FORMAT=clang-format
+if ! [ -x "$(command -v ${CLANG_FORMAT})" ]; then
+  CLANG_FORMAT=clang-format-${REQUIRED_CLANG_FORMAT_MAJOR}.${REQUIRED_CLANG_FORMAT_MINOR}
+fi
+if ! [ -x "$(command -v ${CLANG_FORMAT})" ]; then
   echo >&2 "error: clang-format is not installed"
   echo >&2 "Install clang-format version ${REQUIRED_CLANG_FORMAT_MAJOR}.${REQUIRED_CLANG_FORMAT_MINOR}.*"
   exit 1
@@ -30,7 +34,7 @@ if [ $# -gt 0 ]; then
 fi
 
 if [ $FORCE -eq 0 ]; then
-  CLANG_FORMAT_VERSION=$(clang-format -version | cut -d' ' -f3)
+  CLANG_FORMAT_VERSION=$(${CLANG_FORMAT} -version | cut -d' ' -f3)
   CLANG_FORMAT_MAJOR=$(echo $CLANG_FORMAT_VERSION | cut -d'.' -f1)
   CLANG_FORMAT_MINOR=$(echo $CLANG_FORMAT_VERSION | cut -d'.' -f2)
 
@@ -60,7 +64,7 @@ for f in ${modified_files}; do
   fi
 
   # Check for clang-format issues.
-  d=$(clang-format ${f} | (diff -u "${f}" - || true))
+  d=$(${CLANG_FORMAT} ${f} | (diff -u "${f}" - || true))
   if ! [ -z "${d}" ]; then
     echo "!!! ${f} not compliant to coding style, here is the fix:"
     echo "${d}"
