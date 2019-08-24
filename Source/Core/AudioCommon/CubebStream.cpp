@@ -11,8 +11,7 @@
 #include "Common/Thread.h"
 #include "Core/ConfigManager.h"
 
-// ~10 ms - needs to be at least 240 for surround
-constexpr u32 BUFFER_SAMPLES = 512;
+constexpr u32 MIN_SURROUND_BUFFER_SIZE = 240;
 
 long CubebStream::DataCallback(cubeb_stream* stream, void* user_data, const void* /*input_buffer*/,
                                void* output_buffer, long num_frames)
@@ -54,14 +53,24 @@ bool CubebStream::Init()
     params.layout = CUBEB_LAYOUT_3F2_LFE;
   }
 
-  u32 minimum_latency = 0;
-  if (cubeb_get_min_latency(m_ctx.get(), &params, &minimum_latency) != CUBEB_OK)
+  u32 latency = 240;  // get_min_latency shouldn't fail, but if it does.. about 10ms
+  if (cubeb_get_min_latency(m_ctx.get(), &params, &latency) == CUBEB_OK)
+  {
+    INFO_LOG(AUDIO, "Minimum latency: %i frames", latency);
+  }
+  else
+  {
     ERROR_LOG(AUDIO, "Error getting minimum latency");
-  INFO_LOG(AUDIO, "Minimum latency: %i frames", minimum_latency);
+  }
+
+  if (!m_stereo)
+  {
+    latency = std::max(latency, MIN_SURROUND_BUFFER_SIZE);
+  }
 
   return cubeb_stream_init(m_ctx.get(), &m_stream, "Dolphin Audio Output", nullptr, nullptr,
-                           nullptr, &params, std::max(BUFFER_SAMPLES, minimum_latency),
-                           DataCallback, StateCallback, this) == CUBEB_OK;
+                           nullptr, &params, latency, DataCallback, StateCallback,
+                           this) == CUBEB_OK;
 }
 
 bool CubebStream::SetRunning(bool running)
