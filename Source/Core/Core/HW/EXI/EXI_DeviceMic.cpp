@@ -78,6 +78,7 @@ void CEXIMic::StreamStart()
   params.rate = sample_rate;
   params.channels = 1;
   params.layout = CUBEB_LAYOUT_MONO;
+  params.prefs = CUBEB_STREAM_PREF_NONE;
 
   u32 minimum_latency;
   if (cubeb_get_min_latency(m_cubeb_ctx.get(), &params, &minimum_latency) != CUBEB_OK)
