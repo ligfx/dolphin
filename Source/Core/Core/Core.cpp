@@ -16,6 +16,7 @@
 
 #ifdef _WIN32
 #include <windows.h>
+#include <combaseapi.h>
 #endif
 
 #include "AudioCommon/AudioCommon.h"
@@ -427,6 +428,16 @@ static void EmuThread(std::unique_ptr<BootParameters> boot, WindowSystemInfo wsi
   }};
 
   Common::SetCurrentThreadName("Emuthread - Starting");
+
+#ifdef _WIN32
+  HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+  if (FAILED(hr))
+  {
+    PanicAlert("CoInitializeEx failed with error code: %x", hr);
+    return;
+  }
+  Common::ScopeGuard com_guard{&CoUninitialize};
+#endif
 
   // For a time this acts as the CPU thread...
   DeclareAsCPUThread();
