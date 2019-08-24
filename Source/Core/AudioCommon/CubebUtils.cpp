@@ -14,6 +14,10 @@
 
 #include <cubeb/cubeb.h>
 
+#ifdef _WIN32
+#include <combaseapi.h>
+#endif
+
 static ptrdiff_t s_path_cutoff_point = 0;
 
 static void LogCallback(const char* format, ...)
@@ -61,6 +65,27 @@ std::shared_ptr<cubeb> CubebUtils::GetContext()
   {
     ERROR_LOG(AUDIO, "Error setting cubeb log callback");
   }
+
+#if _WIN32
+  // Cubeb's WASAPI backend requires that COM already be initialized
+  HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+  if (hr == S_OK || hr == S_FALSE)
+  {
+    CoUninitialize();
+  }
+  if (hr == S_OK)
+  {
+    ERROR_LOG(AUDIO, "Cubeb context requested on a non-COM thread (thread:%i)",
+              Common::CurrentThreadId());
+    return nullptr;
+  }
+  if (hr == RPC_E_CHANGED_MODE)
+  {
+    ERROR_LOG(AUDIO, "Cubeb context requested on a non-MTA COM thread (thread:%i)",
+              Common::CurrentThreadId());
+    return nullptr;
+  }
+#endif
 
   cubeb* ctx;
   if (cubeb_init(&ctx, "Dolphin", nullptr) != CUBEB_OK)
