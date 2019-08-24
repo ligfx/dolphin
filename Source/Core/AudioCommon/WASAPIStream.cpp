@@ -23,8 +23,6 @@
 
 WASAPIStream::WASAPIStream()
 {
-  CoInitialize(nullptr);
-
   m_format.Format.wFormatTag = WAVE_FORMAT_EXTENSIBLE;
   m_format.Format.nChannels = 2;
   m_format.Format.nSamplesPerSec = GetMixer()->GetSampleRate();
@@ -51,8 +49,6 @@ WASAPIStream::~WASAPIStream()
     if (m_thread.joinable())
       m_thread.join();
   }
-
-  CoUninitialize();
 }
 
 bool WASAPIStream::isValid()
@@ -82,8 +78,6 @@ static bool HandleWinAPI(std::string message, HRESULT result)
 
 std::vector<std::string> WASAPIStream::GetAvailableDevices()
 {
-  CoInitialize(nullptr);
-
   IMMDeviceEnumerator* enumerator = nullptr;
 
   HRESULT result =
@@ -99,7 +93,6 @@ std::vector<std::string> WASAPIStream::GetAvailableDevices()
 
   if (!HandleWinAPI("Failed to get available devices", result))
   {
-    CoUninitialize();
     return {};
   }
 
@@ -136,15 +129,11 @@ std::vector<std::string> WASAPIStream::GetAvailableDevices()
   devices->Release();
   enumerator->Release();
 
-  CoUninitialize();
-
   return device_names;
 }
 
 IMMDevice* WASAPIStream::GetDeviceByName(std::string name)
 {
-  CoInitialize(nullptr);
-
   IMMDeviceEnumerator* enumerator = nullptr;
 
   HRESULT result =
@@ -191,7 +180,6 @@ IMMDevice* WASAPIStream::GetDeviceByName(std::string name)
     {
       devices->Release();
       enumerator->Release();
-      CoUninitialize();
       return device;
     }
 
@@ -200,7 +188,6 @@ IMMDevice* WASAPIStream::GetDeviceByName(std::string name)
 
   devices->Release();
   enumerator->Release();
-  CoUninitialize();
 
   return nullptr;
 }
